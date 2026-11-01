@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Atlas 3D · Pared abdominal y unión esofagogástrica</title>
+<style>
+  :root{--bg:#0d1117;--panel:#151b24;--line:#263142;--txt:#e7ecf2;--mut:#93a1b3;--acc:#5ab0ff}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  body{display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  header h1{font-size:15px;margin:0;font-weight:650}
+  .tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  .tab{background:transparent;border:1px solid var(--line);color:var(--mut);padding:5px 11px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer}
+  .tab.on{background:var(--acc);border-color:var(--acc);color:#06121f;font-weight:600}
+  main{flex:1;display:flex;min-height:0}
+  #stage{position:relative;flex:1;min-width:0;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 40%,#1b2430 0%,#0d1117 75%)}
+  #stage canvas{display:block;width:100%;height:100%}
+  .layer{position:absolute;inset:0;pointer-events:none}
+  .lbl{position:absolute;transform:translate(-50%,-50%);font-size:10.5px;background:rgba(10,14,20,.76);color:#fff;padding:1px 5px;border-radius:4px;white-space:nowrap}
+  .lbl.clk{pointer-events:auto;cursor:pointer}
+  .lbl.clk:hover{background:#2b3c55}
+  .lbl.zone{background:none;font-size:15px;font-weight:800;text-shadow:0 0 3px #000,0 0 6px #000}
+  .lbl.ruler{background:none;color:#dfe6ee;text-shadow:0 0 3px #000,0 0 5px #000}
+  .lbl.node{background:#1f7a4c;font-weight:700;padding:0 4px;border:1px solid #6fe0a5}
+  .lbl.vsl{background:rgba(120,20,20,.85)} .lbl.nrv{background:rgba(120,100,10,.88)}
+  .lbl.sel{outline:2px solid #fff}
+  .tools{position:absolute;top:8px;left:8px;display:flex;gap:6px;z-index:2;flex-wrap:wrap;align-items:center}
+  .tools button,.tools label{background:rgba(22,29,39,.92);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}
+  .tools button.on{border-color:var(--acc);color:var(--acc)}
+  .tools label{display:flex;align-items:center;gap:6px;cursor:default}
+  .tools input[type=range]{width:80px}
+  .tools select{background:#10161f;color:var(--txt);border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
+  .tool{background:#10161f;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0}
+  .tool label{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin:4px 0}
+  .tool input[type=range]{flex:1}
+  .btn{border:1px solid var(--acc);background:#10233a;color:var(--acc);border-radius:8px;padding:5px 10px;font:inherit;font-size:12.5px;cursor:pointer;margin:2px 4px 2px 0}
+  .btn.on{background:var(--acc);color:#06121f}
+  .ok{color:#6fe0a5}.bad{color:#ff8a80}
+  .gcard{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:8px 0;background:#0e141c}.gcard summary{cursor:pointer;font-size:13px}
+  .recs{padding-left:18px;margin:6px 0}.recs li{margin:4px 0;font-size:12.5px}
+  .gr{display:inline-block;font-size:10.5px;border-radius:4px;padding:0 5px;margin-left:4px;border:1px solid #3a4756;color:#9fb0c3;white-space:nowrap}
+  .gr-F{border-color:#2f7d55;color:#6fe0a5}.gr-D{border-color:#7d6a2f;color:#f2c14e}.gr-BP{border-color:#2f5f7d;color:#7cc4f5}
+  .okb{font-size:11px;color:#6fe0a5}
+  #info textarea,#info input:not([type]){background:#0b1118;color:#e6edf3;border:1px solid var(--line);border-radius:4px;font:inherit;font-size:12.5px}.calc select,.calc input[type=number]{background:#0b1118;color:inherit;border:1px solid var(--line);border-radius:4px}
+  .steps{font-size:12px;color:var(--mut)}
+  .qopt{display:block;width:100%;text-align:left;margin:5px 0}
+  .hint{position:absolute;bottom:6px;left:10px;font-size:11px;color:var(--mut);z-index:2;pointer-events:none}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--mut);z-index:5;background:#0d1117}
+  #loading .bar{width:200px;height:4px;background:#222c3a;border-radius:3px;overflow:hidden}
+  #loading .bar i{display:block;height:100%;width:0;background:var(--acc)}
+  aside{width:390px;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0;overflow:auto}
+  #presets{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 4px}
+  .pre{border:1px solid var(--line);background:#10161f;color:var(--txt);border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}
+  .pre:hover,.pre.on{border-color:var(--acc)}
+  details#gwrap{border-bottom:1px solid var(--line);padding:4px 12px 10px}
+  details#gwrap summary{cursor:pointer;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:6px 0}
+  #groups{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+  .grow{display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none}
+  .grow i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+  .grow input{margin:0}
+  #info{padding:12px 14px 20px}
+  #info h2{margin:0 0 2px;font-size:17px}
+  #info h3{margin:14px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut)}
+  #info p{margin:5px 0}
+  #info ul{margin:4px 0;padding-left:18px}
+  #info li{margin:3px 0}
+  #info .sub{color:var(--mut);margin-bottom:6px}
+  #info .tag{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  #info .src{font-size:11px;color:var(--mut);margin-top:16px;border-top:1px solid var(--line);padding-top:8px}
+  #info table{border-collapse:collapse;width:100%;font-size:12.5px}
+  #info td,#info th{border-bottom:1px solid var(--line);padding:4px;vertical-align:top;text-align:left}
+  #info a{color:var(--acc);text-decoration:none;cursor:pointer}
+  #info .idx{font-size:12.5px;line-height:1.9}
+  #info .idx b{color:var(--mut);font-weight:600}
+  #info .idx a{margin-right:9px;white-space:nowrap}
+  #info .warn{background:#2a2112;border:1px solid #5b4720;border-radius:6px;padding:6px 8px;font-size:12.5px;margin-top:8px}
+  #info .tip{background:#11263a;border:1px solid #23496e;border-radius:6px;padding:6px 8px;font-size:12.5px;margin-top:8px}
+  .plg{display:grid;grid-template-columns:22px 1fr;gap:3px 6px;font-size:12.5px;margin-top:6px}
+  .plg span{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#111}
+  @media (max-width:820px){
+    main{flex-direction:column}
+    #stage{flex:none;height:56vh}
+    aside{width:auto;border-left:none;border-top:1px solid var(--line);flex:1}
+    .tabs{margin-left:0}
+    header h1{display:none}
+  }
+</style>
+<script type="importmap">
+{"imports":{"three":"./lib/three/three.module.js","three/addons/":"./lib/three/addons/","three-mesh-bvh":"./lib/bvh/index.module.js"}}
+</script>
+</head>
+<body>
+<header>
+  <h1>Atlas 3D quirúrgico</h1>
+  <div class="tabs">
+    <button class="tab" data-v="pared">Pared abdominal</button>
+    <button class="tab" data-v="ingle">Región inguinal (TAPP/TEP)</button>
+    <button class="tab" data-v="ueg">Unión esofagogástrica</button>
+    <button class="tab" data-v="cr">Colorrectal</button>
+    <button class="tab" data-v="pac">Mi paciente</button>
+  </div>
+</header>
+<main>
+  <div id="stage">
+    <div id="nvStage" style="position:absolute;left:0;right:0;top:44px;bottom:22px;display:none;z-index:4;background:#000"><canvas id="nvCanvas" style="width:100%;height:100%;display:block"></canvas></div>
+    <div id="loading"><div>Cargando anatomía…</div><div class="bar"><i id="pbar"></i></div></div>
+    <div class="tools">
+      <button id="bReset">Centrar</button>
+      <button id="bSpin">Girar</button>
+      <button id="bLbl" class="on">Etiquetas</button>
+      <label id="explodeW">Despiece <input id="explode" type="range" min="0" max="1.6" step="0.01" value="0"></label>
+      <label id="opW">Hígado <input id="liverOp" type="range" min="0" max="1" step="0.01" value="0.15"></label>
+      <label id="perW">Peritoneo <input id="perOp" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+      <label id="skinW">Piel <input id="skinOp" type="range" min="0" max="1" step="0.01" value="0.35"></label>
+      <label id="hhW">Hiato <select id="hh"><option value="0">Normal</option><option value="1">Tipo I</option><option value="2">Tipo II</option><option value="3">Tipo III</option><option value="4">Tipo IV</option></select></label>
+      <button id="bDia">Diástasis</button>
+      <button id="bObese">Obeso</button>
+      <button id="bFem">Mujer</button>
+      <button id="bCT">Corte TC</button>
+      <button id="bMeasure">Medir</button>
+    </div>
+    <div class="hint">Arrastra para rotar · dos dedos/botón derecho para desplazar · pellizca/rueda para zoom · toca estructuras o etiquetas</div>
+  </div>
+  <aside>
+    <div id="presets"></div>
+    <details id="gwrap" open><summary>Capas visibles</summary><div id="groups"></div></details>
+    <div id="info"></div>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { computeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+import { guidesHTML, wireGuides } from './guides.js';
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+const pmrem=new THREE.PMREMGenerator(renderer);
+const ENV=pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+const camera=new THREE.PerspectiveCamera(36,1,0.05,800);
+const headlight=new THREE.PointLight(0xfff4e8,60,0,1.6); camera.add(headlight);
+let controls=null;
+function makeControls(up){ const ar=controls?controls.autoRotate:false; if(controls) controls.dispose(); camera.up.copy(up);
+  controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.autoRotateSpeed=1.2; controls.screenSpacePanning=true; controls.autoRotate=ar; }
+makeControls(new THREE.Vector3(0,1,0));
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const GRAY=new THREE.Color(0x56606c);
+
+/* ---------- loading ---------- */
+const pbar=document.getElementById('pbar');
+async function fetchBin(url){
+  const r=await fetch(url); const total=+r.headers.get('content-length')||5.5e6; const rd=r.body.getReader(); const chunks=[]; let got=0;
+  for(;;){const {done,value}=await rd.read(); if(done) break; chunks.push(value); got+=value.length; pbar.style.width=Math.min(100,got/total*100)+'%';}
+  const out=new Uint8Array(got); let o=0; for(const c of chunks){out.set(c,o); o+=c.length;} return out.buffer;
+}
+const [MAN,BUF,EX]=await Promise.all([fetch('manifest.json').then(r=>r.json()),fetchBin('anatdata.json').then(async b=>{ const t=JSON.parse(new TextDecoder().decode(b)).gz; const bin=atob(t); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(ds).arrayBuffer(); }),fetch('extras.json').then(r=>r.json())]);
+const GEO={}, TAG={};
+for(const e of MAN){
+  const q=new Uint16Array(BUF,e.vo,e.n*3), p=new Float32Array(e.n*3);
+  for(let i=0;i<e.n;i++) for(let k=0;k<3;k++) p[i*3+k]=e.min[k]+q[i*3+k]/65535*(e.max[k]-e.min[k]);
+  const idx=e.i32?new Uint32Array(BUF,e.io,e.m*3):new Uint16Array(BUF,e.io,e.m*3);
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(p,3)); g.setIndex(new THREE.BufferAttribute(idx.slice(),1)); g.computeVertexNormals(); g.computeBoundsTree();
+  if(e.morph){ g.morphAttributes.position=e.morph.map(mm=>{ const q2=new Uint16Array(BUF,mm.o,e.n*3), a=new Float32Array(e.n*3); for(let i=0;i<e.n*3;i++){ const k=i%3; a[i]=e.min[k]+q2[i]/65535*(e.max[k]-e.min[k]); } const ba=new THREE.BufferAttribute(a,3); ba.name=mm.name; return ba; }); }
+  GEO[e.id]=g; if(e.to!==undefined) TAG[e.id]=new Uint8Array(BUF,e.to,e.n);
+}
+document.getElementById('loading').remove();
+if(EX.lap) EX.lap.supra_in=[1.5,3.5,5.2];
+
+/* ---------- materials ---------- */
+const noise=(x,y,z)=>{const s=Math.sin(x*12.9898+y*78.233+z*37.719)*43758.5453; return s-Math.floor(s);};
+const fbm=(x,y,z)=>.55*noise(Math.floor(x*2),Math.floor(y*2),Math.floor(z*2))+.45*noise(Math.floor(x*5),Math.floor(y*5),Math.floor(z*5));
+function colorize(g, fn, varAmt=.12){
+  const p=g.attributes.position, n=p.count, a=new Float32Array(n*3), c=new THREE.Color();
+  for(let i=0;i<n;i++){ fn(i,c); const m=1-varAmt/2+varAmt*fbm(p.getX(i),p.getY(i),p.getZ(i)); a[i*3]=c.r*m; a[i*3+1]=c.g*m; a[i*3+2]=c.b*m; }
+  g.setAttribute('color',new THREE.BufferAttribute(a,3)); return a;
+}
+const NOISE_GLSL=`
+float h3(vec3 p){ p=fract(p*0.3183099+.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float vn(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
+  return mix(mix(mix(h3(i+vec3(0,0,0)),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z); }
+vec3 pertN(vec3 sp, vec3 sn, vec2 dH, float fd){ vec3 sx=dFdx(sp), sy=dFdy(sp); vec3 r1=cross(sy,sn), r2=cross(sn,sx); float det=dot(sx,r1)*fd; vec3 g=sign(det)*(dH.x*r1+dH.y*r2); return normalize(abs(det)*sn-g); }`;
+function realize(mat,o={}){
+  const fiber=o.fiber||null, amp=(o.amp??(fiber?.03:.012))*.3, freq=(o.freq??(fiber?5.5:2.2))*.45, cut=o.cut||null;
+  mat.onBeforeCompile=sh=>{
+    sh.uniforms.uFib={value:fiber?new THREE.Vector3(...fiber).normalize():new THREE.Vector3(0,0,0)}; sh.uniforms.uAmp={value:amp}; sh.uniforms.uFreq={value:freq}; sh.uniforms.uCut={value:cut?new THREE.Vector4(cut[0],cut[1],cut[2],cut[3]):new THREE.Vector4(0,0,0,0)}; sh.uniforms.uCutA={value:cut?cut[4]:0}; mat.userData.sh=sh;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vObjP;').replace('#include <begin_vertex>','#include <begin_vertex>\nvObjP=position;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vObjP; uniform vec3 uFib; uniform float uAmp; uniform float uFreq; uniform vec4 uCut; uniform float uCutA;'+NOISE_GLSL)
+      .replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\n if(uCut.z>0.0){ vec2 dd=vObjP.xy-uCut.xy; float ca=cos(uCutA), sa=sin(uCutA); vec2 rr=vec2(ca*dd.x+sa*dd.y,-sa*dd.x+ca*dd.y); if(rr.x*rr.x/(uCut.z*uCut.z)+rr.y*rr.y/(uCut.w*uCut.w)<1.0 && vObjP.z>1.0) discard; }')
+      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+      { vec3 p=vObjP; float h;
+        if(dot(uFib,uFib)>0.0){ vec3 q=p-uFib*dot(p,uFib)*.85; h=.8*vn(q*uFreq*1.6+vec3(0,0,vn(p*.5)*1.5))+.2*vn(p*uFreq); }
+        else { h=.6*vn(p*uFreq)+.4*vn(p*uFreq*3.1); }
+        h*=uAmp*20.0; normal=pertN(-vViewPosition, normal, vec2(dFdx(h),dFdy(h)), faceDirection); }`);
+  };
+  mat.customProgramCacheKey=()=>'rl'+(fiber?fiber.join(','):'o')+amp+freq+(cut?'c':'');
+  return mat;
+}
+function physMat(o={},r={}){ return realize(new THREE.MeshPhysicalMaterial(Object.assign({vertexColors:true,roughness:.5,metalness:0,clearcoat:.35,clearcoatRoughness:.35,envMap:ENV,envMapIntensity:.55},o)),r); }
+const COL={muscle:0xa63d33,apo:0xe9e1d2,tend:0xf0e8d8,bone:0xe6d8bb,cart:0xb9d0d6,diaph:0xa0443a,stomach:0xd99484,eso:0xc9837a,liver:0x7b2c22,spleen:0x6a2438,pancreas:0xe2b77f,duod:0xd4978a,gb:0x3f6b2f,kidney:0x8b3a2e,adrenal:0xd9a441,art:0xc4211b,vein:0x2e4fae,bladder:0xe3bba2,colon:0xc79a7a,lig:0xf0e9dc,psoas:0x9e3b33};
+function meshOf(id, base, o={}){
+  const g=o.clone?GEO[id].clone():GEO[id];
+  if(o.clone) g.boundsTree=GEO[id].boundsTree;
+  if(!g.attributes.color || o.clone) colorize(g, o.fn || ((i,c)=>c.setHex(base)), o.vary??.12);
+  const m=new THREE.Mesh(g, o.mat || physMat(o.m||{},o.r||{})); m.userData.mesh=id; if(g.morphAttributes.position) m.updateMorphTargets(); return m;
+}
+function tubeMesh(L){
+  const pts=L.p.map(p=>V(...p)); if(pts.length<2) return null;
+  const c=new THREE.CatmullRomCurve3(pts,false,'centripetal');
+  return new THREE.Mesh(new THREE.TubeGeometry(c,Math.max(20,pts.length*8),L.r,10,false), new THREE.MeshPhysicalMaterial({color:L.c,roughness:.4,clearcoat:.6,clearcoatRoughness:.25,envMap:ENV,envMapIntensity:.6}));
+}
+function polyline(pts,color,o={}){
+  const g=new THREE.BufferGeometry().setFromPoints(pts.map(p=>Array.isArray(p)?V(...p):p));
+  const m=o.dash? new THREE.LineDashedMaterial({color,dashSize:o.dash,gapSize:o.dash*.7,transparent:true,opacity:o.op??1,depthTest:o.dt??true}) : new THREE.LineBasicMaterial({color,transparent:true,opacity:o.op??1,depthTest:o.dt??true});
+  const l=new THREE.Line(g,m); if(o.dash) l.computeLineDistances(); return l;
+}
+function polyMesh(P,color,op=.5){
+  const pts=P.map(p=>V(...p)); const c=pts.reduce((a,b)=>a.add(b),V(0,0,0)).multiplyScalar(1/pts.length);
+  const pos=[]; for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length]; pos.push(c.x,c.y,c.z,a.x,a.y,a.z,b.x,b.y,b.z);}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.computeVertexNormals();
+  return new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4}));
+}
+
+/* ---------- engine ---------- */
+let cur=null, sel=null, showLbl=true;
+const views={}; let nvVis=false;
+class View{
+  constructor(id){ this.id=id; this.scene=new THREE.Scene(); this.scene.add(camera.parent===null?camera:new THREE.Object3D());
+    this.scene.add(new THREE.HemisphereLight(0xfff6ee,0x2a2f38,.55));
+    const d=new THREE.DirectionalLight(0xffffff,1.1); d.position.set(10,25,35); this.scene.add(d);
+    const d2=new THREE.DirectionalLight(0xbcd0ff,.35); d2.position.set(-20,-5,-25); this.scene.add(d2);
+    this.layer=document.createElement('div'); this.layer.className='layer'; stage.appendChild(this.layer);
+    this.groups=[]; this.gmap={}; this.items={}; this.labels=[]; this.pick=[]; this.repaint=[]; this.presets=[]; this.explode=false; views[id]=this; }
+  group(id,name,color,on=true,ez=0){ const g={id,name,color,on,ez,obj:new THREE.Group()}; this.scene.add(g.obj); this.groups.push(g); this.gmap[id]=g; return g; }
+  item(id,def){ this.items[id]=Object.assign({id,objs:this.pick.filter(o=>o.userData.item===id)},def); return this.items[id]; }
+  add(gid,obj,iid){ if(!obj) return null; this.gmap[gid].obj.add(obj); obj.userData.gid=gid;
+    if(iid){ obj.userData.item=iid; if(this.items[iid]) this.items[iid].objs.push(obj); }
+    if(iid||obj.userData.classify) this.pick.push(obj); return obj; }
+  label(gid,p,text,o={}){ const el=document.createElement('div'); el.className='lbl '+(o.cls||''); el.textContent=text;
+    if(o.item){ el.classList.add('clk'); el.addEventListener('click',e=>{e.stopPropagation(); select(o.item===sel?null:o.item);}); }
+    this.layer.appendChild(el); this.labels.push({p:Array.isArray(p)?V(...p):p.clone(),el,gid,item:o.item||null,keep:/zone|node|ruler/.test(o.cls||''),occ:false}); }
+  setPreset(list){ for(const g of this.groups){ g.on=list.includes(g.id); g.obj.visible=g.on; } if(this.gmap.fem){ this.gmap.fem.on=female; this.gmap.fem.obj.visible=female; } }
+}
+function info(sub,lim,bul,extra=''){ return `<p class="sub">${sub}</p>${lim?`<h3>Descripción</h3><p>${lim}</p>`:''}${bul&&bul.length?`<h3>Relevancia quirúrgica</h3><ul>${bul.map(b=>`<li>${b}</li>`).join('')}</ul>`:''}${extra}`; }
+const LBYG={}; for(const L of EX.labels){ (LBYG[L.g]=LBYG[L.g]||[]).push(L); }
+const LINES={}; for(const L of EX.lines){ (LINES[L.g]=LINES[L.g]||[]).push(L); }
+function addLines(v,gid){ for(const L of (LINES[gid]||[])) v.add(gid,tubeMesh(L),L.item); }
+function addExLabels(v,gid){ for(const L of (LBYG[gid]||[])) v.label(gid,L.p,L.t,{item:L.item,cls:L.cls||''}); }
+function centroid(id,filter){ const p=GEO[id].attributes.position; const c=V(0,0,0); let n=0; for(let i=0;i<p.count;i++){ const x=p.getX(i),y=p.getY(i),z=p.getZ(i); if(filter&&!filter(x,y,z)) continue; c.x+=x;c.y+=y;c.z+=z;n++; } return n?c.multiplyScalar(1/n):c; }
+function extreme(id,fn){ const p=GEO[id].attributes.position; let best=null,bv=-1e9; for(let i=0;i<p.count;i++){ const v=fn(p.getX(i),p.getY(i),p.getZ(i)); if(v>bv){bv=v; best=V(p.getX(i),p.getY(i),p.getZ(i));} } return best; }
+
+/* ======================= PARED ABDOMINAL ======================= */
+const EHS={1:['M1','#e04f5f'],2:['M2','#f08a3c'],3:['M3','#f2c14e'],4:['M4','#8cc63f'],5:['M5','#33b07a'],6:['L1','#3d8bfd'],7:['L2','#6a6be0'],8:['L3','#3fc1df'],9:['L4','#a35de8']};
+const EHSI={
+  M1:['M1 · Subxifoidea','Desde el xifoides hasta 3 cm caudal. Lateralmente, borde externo de la vaina de los rectos.',['Hernias incisionales tras laparotomía alta o esternotomía (drenajes mediastínicos).','Límite craneal óseo-cartilaginoso: el solapamiento de la malla exige disección retroxifoidea o fijación a cartílagos.']],
+  M2:['M2 · Epigástrica','Desde 3 cm por debajo del xifoides hasta 3 cm por encima del ombligo.',['Hernias epigástricas primarias.','Frecuente asociación con diástasis de rectos supraumbilical.','Aquí el TA tiene fibras musculares por detrás del recto (relevante en TAR).']],
+  M3:['M3 · Umbilical','Desde 3 cm por encima hasta 3 cm por debajo del ombligo.',['Hernias umbilicales y paraumbilicales primarias; hernias de trócar umbilical.','Preservar/reinsertar el tallo umbilical en reparaciones abiertas.']],
+  M4:['M4 · Infraumbilical','Desde 3 cm por debajo del ombligo hasta 3 cm por encima del pubis.',['Contiene la línea arcuata: por debajo no hay vaina posterior; el plano retromuscular se continúa con el preperitoneal/Retzius.']],
+  M5:['M5 · Suprapúbica','Desde el pubis hasta 3 cm craneal.',['Proximidad de vejiga y espacio de Retzius; fijación a Cooper/sínfisis.','Tras Pfannenstiel o laparotomía media baja.']],
+  L1:['L1 · Subcostal','Lateral a la vaina de los rectos, entre reborde costal y la horizontal 3 cm por encima del ombligo.',['Hernias tras incisiones subcostales (Kocher, chevron).','Malla con disección retrocostal / supradiafragmática para solapamiento.']],
+  L2:['L2 · Flanco','Lateral a la vaina, entre las horizontales 3 cm por encima y 3 cm por debajo del ombligo.',['Cinturón de Spiegel (hernias de Spiegel).','Incisiones transversas y trócares laterales.']],
+  L3:['L3 · Ilíaca','Lateral a la vaina, entre la horizontal 3 cm por debajo del ombligo y la región inguinal.',['Hernias de Spiegel bajas; incisiones de McBurney/Rocky-Davis; trócares.','Disección hacia el espacio de Bogros para solapamiento inferior.']],
+  L4:['L4 · Lumbar','Lateral-dorsal a la línea axilar anterior, entre reborde costal y cresta ilíaca.',['Hernias lumbares primarias: triángulo superior (Grynfeltt-Lesshaft) e inferior (Petit).','Incisionales tras lumbotomía. Límites óseos (12.ª costilla, cresta) condicionan fijación.']]};
+
+function crossSVG(above){
+  const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" fill="#e7ecf2" font-size="8.5" ${o}>${t}</text>`;
+  const D=(x,y,n,c)=>`<circle cx="${x}" cy="${y}" r="6" fill="${c}" stroke="#0d1218"/><text x="${x}" y="${y+3}" font-size="8" text-anchor="middle" font-weight="700" fill="#111">${n}</text>`;
+  let s=`<svg viewBox="0 0 330 185" width="100%" style="background:#0b1016;border-radius:8px;margin-top:6px">`;
+  s+=`<rect x="10" y="8" width="312" height="6" fill="#d9a184"/><rect x="10" y="14" width="312" height="26" fill="#e9d38c" opacity=".45"/><line x1="10" y1="30" x2="322" y2="30" stroke="#d8c690" stroke-dasharray="3 2"/>`;
+  s+=`<rect x="10" y="48" width="7" height="66" fill="#f1ece0"/><ellipse cx="60" cy="80" rx="42" ry="21" fill="#c4524a"/>`;
+  s+=`<path d="M17 57 Q60 50 104 57 L132 58" stroke="#f1ece0" stroke-width="3" fill="none"/>`;
+  s+=`<rect x="132" y="50" width="190" height="14" fill="#b5473f"/><rect x="134" y="68" width="188" height="13" fill="#a8463f"/><rect x="138" y="85" width="184" height="12" fill="#913d37"/>`;
+  if(above){ s+=`<path d="M134 72 Q118 63 104 58" stroke="#f1ece0" stroke-width="2" fill="none"/><path d="M134 78 Q118 104 98 106 L17 106" stroke="#f1ece0" stroke-width="3" fill="none"/><rect x="70" y="109" width="70" height="7" fill="#913d37"/><path d="M138 91 Q140 100 140 112" stroke="#913d37" stroke-width="7" fill="none"/><line x1="17" y1="112" x2="70" y2="112" stroke="#f1ece0" stroke-width="1.5"/>`; }
+  else { s+=`<path d="M134 74 Q118 62 104 58" stroke="#f1ece0" stroke-width="2.5" fill="none"/><path d="M138 90 Q120 66 104 59" stroke="#f1ece0" stroke-width="2" fill="none"/>`; }
+  s+=`<line x1="10" y1="122" x2="322" y2="122" stroke="#6fa8dc" stroke-width="1.5" stroke-dasharray="4 2"/><rect x="10" y="123" width="312" height="13" fill="#e9d38c" opacity=".3"/><line x1="10" y1="137" x2="322" y2="137" stroke="#8ec1e8" stroke-width="2"/>`;
+  s+=`<circle cx="52" cy="103" r="2.6" fill="#d2332b"/><circle cx="58" cy="103" r="2.6" fill="#3b63c9"/><path d="M215 83 L140 83 Q120 86 100 96" stroke="#f2cf3a" stroke-width="1.6" fill="none"/><circle cx="215" cy="83" r="2.6" fill="#f2cf3a"/><circle cx="221" cy="83" r="2" fill="#d2332b"/>`;
+  s+=T(232,27,'Piel · TCS · fascia de Scarpa')+T(232,60,'Oblicuo externo')+T(232,77,'Oblicuo interno')+T(232,94,'Transverso')+T(46,83,'Recto')+T(4,46,'L. alba','font-size="7"')+T(18,52,'Vaina anterior','font-size="7"')+T(232,119,'F. transversalis')+T(232,133,'Grasa preperitoneal')+T(232,148,'Peritoneo')+T(150,168,'Cavidad peritoneal','fill-opacity=".7"');
+  s+=above? T(18,118,'Vaina posterior','font-size="7"')+T(143,107,'fibras mediales TA','font-size="7"') : T(18,118,'Sin vaina posterior','font-size="7"');
+  s+=T(150,79,'paquete NV','font-size="7"')+T(62,100,'a/v epigástr. inf.','font-size="6.5"');
+  s+=D(72,44,1,'#ffd166')+D(13,84,2,'#ef476f')+D(96,above?100:104,3,'#06d6a0')+D(96,130,4,'#4cc9f0')+D(96,152,5,'#f78c6b')+D(190,above?104:108,6,'#c77dff')+D(190,66,7,'#b5e48c')+`</svg>`;
+  s+=`<div class="plg"><span style="background:#ffd166">1</span><div><b>Onlay</b>: sobre la vaina anterior/aponeurosis del OE.</div><span style="background:#ef476f">2</span><div><b>Inlay</b>: puenteando el defecto (en desuso por recurrencia).</div><span style="background:#06d6a0">3</span><div><b>Sublay retromuscular</b> (Rives-Stoppa): entre recto y vaina posterior${above?'':'; bajo la arcuata, sobre fascia transversalis'}.</div><span style="background:#4cc9f0">4</span><div><b>Preperitoneal</b>: entre fascia transversalis y peritoneo.</div><span style="background:#f78c6b">5</span><div><b>Intraperitoneal (IPOM)</b>: malla con barrera antiadherente.</div><span style="background:#c77dff">6</span><div><b>TAR</b>: incisión de la vaina posterior medial a la línea semilunar, sección del TA y disección entre TA y fascia transversalis.</div><span style="background:#b5e48c">7</span><div><b>Separación anterior</b> (Ramírez): sección de la aponeurosis del OE y disección entre OE y OI.</div></div>`;
+  return s;
+}
+
+function buildPared(){
+  const v=new View('pared'); v.explode=true;
+  v.group('ehs','Zonas EHS','#f08a3c',true,5);
+  v.group('eo','Oblicuo externo + vaina ant.','#a63d33',false,5);
+  v.group('rectus','Recto','#c4524a',false,3.4);
+  v.group('vessels','Vasos epigástricos','#c4211b',false,2.6);
+  v.group('io','Oblicuo interno','#9b3a31',false,2.0);
+  v.group('nerves','Paquetes neurovasculares','#f0d050',false,.8);
+  v.group('ta','Transverso','#8a332c',false,.4);
+  v.group('folds','Pliegues peritoneales','#e8d8a8',false,-.6);
+  v.group('bones','Esqueleto','#e6d8bb',true,0);
+  v.group('post','Pared posterior y diafragma','#9e3b33',false,0);
+  v.group('skin','Piel','#e8b9a0',false,6.5);
+  v.group('perit','Peritoneo (cara interna)','#e9dccf',false,-.8);
+  v.group('lumbar','Región lumbar','#00b4d8',false,0);
+  v.group('refs','Referencias','#ffffff',true,5.2);
+  const L=EX.land;
+
+  for(const k in EHS){ const [code,c]=EHS[k]; const t=EHSI[code]; v.item(code,{name:t[0],color:c,html:info('Clasificación EHS · '+(code[0]==='M'?'línea media':'lateral'),t[1],t[2])}); }
+  v.item('eo',{name:'Oblicuo externo y su aponeurosis',color:'#a63d33',html:info('Capa muscular superficial lateral · malla real',
+    'Origen en la cara externa de las costillas 5.ª–12.ª. Fibras inferomediales. Su aponeurosis (blanco en el modelo) forma la vaina anterior del recto, la línea alba y, en su borde inferior, el ligamento inguinal.',
+    ['Separación anterior de componentes (Ramírez): sección de la aponeurosis 1–2 cm lateral a la línea semilunar y disección en el plano avascular OE–OI.','La transición músculo-aponeurosis se sitúa medialmente a nivel de la línea medioclavicular y, abajo, por debajo de la línea espinoumbilical.','Inervación T7–T12.'])});
+  v.item('rectus',{name:'Recto del abdomen',color:'#c4524a',html:info('Músculo de la línea media · malla real',
+    'Del pubis a los cartílagos costales 5.º–7.º y xifoides. Intersecciones tendinosas (marcadas en blanco) a nivel del ombligo, xifoides y una intermedia, adheridas a la vaina anterior.',
+    ['Inervación segmentaria por su borde posterolateral: incisiones paramedianas o sección lateral de la vaina posterior lo denervan.','Diástasis: separación inter-rectos aumentada (suele usarse > 2 cm) sin defecto fascial.','Plano retromuscular: los vasos epigástricos discurren por su cara posterior.'])});
+  v.item('io',{name:'Oblicuo interno',color:'#9b3a31',html:info('Capa muscular intermedia · malla real',
+    'Origen en fascia toracolumbar, cresta ilíaca y 2/3 laterales del ligamento inguinal. Fibras superomediales. Por encima de la línea arcuata su aponeurosis se desdobla alrededor del recto.',
+    ['El paquete neurovascular discurre entre OI y TA: plano de los bloqueos TAP.','Sus fibras inferiores forman con el TA el arco que limita por arriba el orificio miopectíneo.'])});
+  v.item('ta',{name:'Transverso del abdomen',color:'#8a332c',html:info('Capa muscular profunda · malla real',
+    'Fibras horizontales desde los cartílagos costales 7.º–12.º (interdigitado con el diafragma), fascia toracolumbar, cresta ilíaca y ligamento inguinal. En el abdomen superior sus fibras musculares se extienden por detrás del recto.',
+    ['TAR (Novitsky): incisión de la lámina posterior medial a la línea semilunar → sección de las fibras mediales del TA (empezar en el tercio superior, donde es muscular) → plano entre TA y fascia transversalis hasta el psoas si es necesario.','Cranealmente se continúa con el diafragma: disección retroxifoidea/retrocostal.'])});
+  v.item('rsp',{name:'Vaina posterior y línea arcuata',color:'#3a7bd5',html:info('Aponeurosis profunda',
+    'Por encima de la línea arcuata: lámina posterior del OI + aponeurosis del TA. La línea arcuata (azul) está aproximadamente a un tercio de la distancia ombligo–pubis, con gran variabilidad; por debajo el recto descansa sobre la fascia transversalis.',
+    ['Suelo del espacio retromuscular (Rives-Stoppa): se abre 0,5–1 cm del borde medial y se cierra en la línea media antes de colocar la malla.','En TAR se incide 0,5–1 cm medial a la línea semilunar para no seccionar los nervios que entran en el recto.'],
+    `<p><a data-item="corte_sup">→ Corte axial por encima de la arcuata</a><br><a data-item="corte_inf">→ Corte axial por debajo de la arcuata</a></p>`)});
+  v.item('eia',{name:'Vasos epigástricos inferiores',color:'#c4211b',html:info('Rama de la ilíaca externa · trazado ajustado a la anatomía',
+    'Nacen justo por encima del ligamento inguinal, ascienden medialmente al anillo profundo, entran en la vaina del recto a nivel de la línea arcuata y discurren por la cara posterior del recto hasta anastomosarse con la epigástrica superior.',
+    ['Trócares laterales: a la altura del ombligo suelen estar a unos 4–6 cm de la línea media; colocar los trócares lateral al borde del recto y bajo visión.','Límite entre hernia inguinal directa (medial) e indirecta (lateral).','Perforantes periumbilicales: preservarlas en la separación anterior reduce la necrosis cutánea.'])});
+  v.item('esa',{name:'Arteria epigástrica superior',color:'#c4211b',html:info('Rama terminal de la torácica interna','Entra en la vaina del recto por detrás del 7.º cartílago costal.',['Sangrado en disección retroxifoidea y trócares subxifoideos.'])});
+  v.item('dcia',{name:'Arteria circunfleja ilíaca profunda',color:'#c4211b',html:info('Rama de la ilíaca externa','Discurre por detrás del ligamento inguinal hacia la EIAS y sigue la cresta ilíaca entre TA y OI.',['Riesgo en trócares de fosa ilíaca y tackers laterales cerca de la EIAS.'])});
+  v.item('icv',{name:'Arterias intercostales y subcostal',color:'#c4211b',html:info('Paquete neurovascular segmentario','Acompañan a los nervios T7–T12 entre OI y TA.',['Sangrado en incisiones laterales y suturas transfasciales.'])});
+  v.item('tan',{name:'Nervios toracoabdominales T7–T11 y subcostal T12',color:'#f0d050',html:info('Inervación motora y sensitiva de la pared',
+    'Discurren entre OI y TA y entran en la vaina del recto por su borde posterolateral. Dermatomas: T7 xifoides, T10 ombligo, T12 suprapúbico.',
+    ['Su sección produce denervación de rectos y oblicuos (abombamiento): incisiones subcostales/de flanco, sección lateral de la vaina posterior, disección en el plano OI–TA.','En TAR se preservan incidiendo la vaina posterior medial a su entrada en el recto.','Bloqueo TAP: anestésico en el plano OI–TA.'])});
+  v.item('ihii',{name:'Nervios iliohipogástrico e ilioinguinal (L1)',color:'#e0b830',html:info('Plexo lumbar',
+    'Perforan el OI cerca de la EIAS y continúan entre OI y aponeurosis del OE; el ilioinguinal entra en el conducto inguinal.',
+    ['Riesgo en McBurney, trócares de fosa ilíaca y hernioplastia anterior (inguinodinia).'])});
+  v.item('folds',{name:'Pliegues umbilicales',color:'#e8d8a8',html:info('Cara peritoneal de la pared anterior','Mediano: uraco. Mediales: arterias umbilicales obliteradas. Laterales: vasos epigástricos inferiores.',['Delimitan las fosas supravesical, inguinal medial (directa) e inguinal lateral (indirecta).'])});
+  v.item('falc',{name:'Ligamento redondo y falciforme',color:'#e8d8a8',html:info('Línea media supraumbilical','Del ombligo al hígado, algo a la derecha de la línea media; contiene la vena umbilical obliterada.',['En IPOM/retroxifoideo suele descolgarse para solapamiento.','Venas paraumbilicales recanalizadas en hipertensión portal.'])});
+  v.item('bones',{name:'Esqueleto (costillas, cartílagos, esternón, columna, pelvis)',color:'#e6d8bb',html:info('Referencias óseas · mallas reales','Reborde costal, xifoides, crestas ilíacas, EIAS, sínfisis y columna T9–L5.',['Puntos de anclaje en reparaciones complejas: ligamento de Cooper, cartílagos costales, cresta ilíaca.'])});
+  v.item('inglig',{name:'Ligamento inguinal',color:'#f0e9dc',html:info('Borde inferior de la aponeurosis del OE','De la EIAS al tubérculo púbico.',['Límite inferior de la región L3; referencia de las hernias inguinofemorales.'])});
+  v.item('post',{name:'Pared posterior: psoas, ilíaco, cuadrado lumbar y diafragma',color:'#9e3b33',html:info('Mallas reales','Límites del espacio retroperitoneal y del plano TAR posterior.',['En TAR extenso la disección lateral llega al psoas; el cuadrado lumbar limita la región L4.'])});
+  v.item('corte_sup',{name:'Corte axial por encima de la línea arcuata',color:'#06d6a0',grp:'cortes',html:`<p class="sub">Hemiabdomen derecho, de línea media (izquierda) a flanco.</p>${crossSVG(true)}<p style="margin-top:8px"><a data-item="corte_inf">→ Ver por debajo de la arcuata</a></p>`});
+  v.item('corte_inf',{name:'Corte axial por debajo de la línea arcuata',color:'#06d6a0',grp:'cortes',html:`<p class="sub">Las tres aponeurosis pasan por delante del recto; detrás solo queda la fascia transversalis.</p>${crossSVG(false)}<p style="margin-top:8px"><a data-item="corte_sup">→ Ver por encima de la arcuata</a></p>`});
+
+  // EHS overlay (EO geometry with zone colours)
+  const zcol={}; for(const k in EHS) zcol[k]=new THREE.Color(EHS[k][1]);
+  for(const s of ['R','L']){
+    const tag=TAG['eo_'+s];
+    const m=meshOf('eo_'+s,0,{clone:true,fn:(i,c)=>{const z=tag[i]>>4; z?c.copy(zcol[z]):c.setHex(0x8d96a0);},vary:.08,m:{roughness:.6,clearcoat:.15,polygonOffset:true,polygonOffsetFactor:-2}});
+    m.userData.classify=h=>{const z=tag[h.face.a]>>4; return z?EHS[z][0]:'eo';};
+    m.userData.ehsTag=tag; v.add('ehs',m);
+    v.repaint.push(sl=>{ const a=m.geometry.attributes.color; const base=m.userData.base||(m.userData.base=a.array.slice());
+      for(let i=0;i<tag.length;i++){ const z=tag[i]>>4; let r=base[i*3],g=base[i*3+1],b=base[i*3+2];
+        if(sl&&EHSI[sl]&&z&&EHS[z][0]!==sl){ r=r*.3+.34*.7; g=g*.3+.38*.7; b=b*.3+.42*.7; }
+        a.array[i*3]=r; a.array[i*3+1]=g; a.array[i*3+2]=b; } a.needsUpdate=true; });
+    const mm=meshOf('eo_'+s,0,{fn:(i,c)=>c.setHex((tag[i]&15)?COL.apo:COL.muscle),vary:.14,r:{fiber:s==='R'?[1,-1,0]:[-1,-1,0]}}); v.add('eo',mm,'eo');
+    const io=TAG['io_'+s]; v.add('io',meshOf('io_'+s,0,{fn:(i,c)=>c.setHex(io[i]?COL.apo:0x9b3a31),r:{fiber:s==='R'?[1,1,0]:[-1,1,0]}}),'io');
+    const ta=TAG['ta_'+s]; v.add('ta',meshOf('ta_'+s,0,{fn:(i,c)=>c.setHex(ta[i]?COL.apo:0x8a332c),r:{fiber:[1,0,0]}}),'ta');
+    const rt=TAG['rectus_'+s]; const rm=meshOf('rectus_'+s,0,{fn:(i,c)=>c.setHex(rt[i]?COL.tend:0xb4473d),r:{fiber:[0,1,0]}}); v.add('rectus',rm,'rectus'); (v.diaMeshes=v.diaMeshes||[]).push(rm);
+    v.add('eo',meshOf('inglig_'+s,COL.lig,{m:{clearcoat:.5}}),'inglig');
+  }
+  // EHS zone labels at centroid of front vertices
+  for(const k in EHS){ const code=EHS[k][0];
+    for(const s of (code[0]==='M'?['R']:['R','L'])){
+      const ids=code[0]==='M'?['eo_R','eo_L']:['eo_'+s]; const c=V(0,0,0); let n=0;
+      for(const id of ids){ const p=GEO[id].attributes.position, t=TAG[id]; for(let i=0;i<p.count;i++){ if((t[i]>>4)!=k) continue; const z=p.getZ(i), x=p.getX(i);
+        const front= code==='L4' ? Math.abs(x)>11 : z>2; if(!front) continue; c.x+=x;c.y+=p.getY(i);c.z+=z;n++; } }
+      if(n){ c.multiplyScalar(1/n); if(code==='L4') c.x+= (s==='R'?-1:1)*.6; else c.z+=1.2; v.label('ehs',c,code,{cls:'zone',item:code}); } } }
+  for(const ln of EX.ehs_lines) v.add('ehs',polyline(ln,0x0d1117,{dash:.5,op:.8}));
+  // real epigastric vessels (BodyParts3D 4.0)
+  for(const s of ['R','L']){ v.add('vessels',meshOf('iea_'+s,COL.art,{vary:.05,m:{clearcoat:.6}}),'eia'); v.add('vessels',meshOf('iev_'+s,COL.vein,{vary:.05,m:{clearcoat:.6}}),'eia'); }
+  v.add('vessels',meshOf('sea',COL.art,{vary:.05,m:{clearcoat:.6}}),'esa'); v.add('vessels',meshOf('sev',COL.vein,{vary:.05,m:{clearcoat:.6}}),'esa');
+  v.add('nerves',meshOf('subcostal',COL.art,{vary:.05}),'icv');
+  const skinMat=physMat({transparent:true,opacity:.35,depthWrite:false,roughness:.6,clearcoat:.1,sheen:.4,sheenColor:new THREE.Color(0xffd9c4)},{amp:.008,freq:3});
+  v.add('skin',meshOf('skin',0xe3b49a,{mat:skinMat,vary:.06}),'skin'); v.skinMats=[skinMat];
+  v.item('skin',{name:'Piel y tejido celular subcutáneo',color:'#e8b9a0',html:info('Malla real (BodyParts3D 4.0)','Entre la piel y la aponeurosis del OE: fascia de Camper (grasa) y fascia de Scarpa (membranosa, infraumbilical). Perforantes periumbilicales de la epigástrica inferior.',['Plano de colgajos en onlay y separación anterior: preservar perforantes periumbilicales reduce necrosis cutánea.','El control «Piel» ajusta la transparencia.'])});
+  const perMat=physMat({transparent:true,opacity:.8,depthWrite:false,roughness:.25,clearcoat:.9,clearcoatRoughness:.1,side:THREE.DoubleSide},{amp:.01,freq:1.6});
+  const ptag=TAG['periton'];
+  v.add('perit',meshOf('periton',0,{clone:true,mat:perMat,fn:(i,c)=>{ const f=ptag[i]/255; c.setRGB(.93-.05*f,.84-.02*f,.78-.32*f); },vary:.18}),'perit'); (window.PERMATS=window.PERMATS||[]).push(perMat);
+  v.item('perit',{name:'Peritoneo parietal y grasa preperitoneal',color:'#e9dccf',html:info('Superficie generada desde la cavidad sobre la anatomía real','Visto desde dentro, el peritoneo parietal es una lámina brillante; por debajo, la grasa preperitoneal (más abundante en el hipogastrio) deja entrever vasos y pliegues.',['IPOM: la malla queda en contacto con el peritoneo/vísceras → necesita barrera antiadherente.','El control «Peritoneo» ajusta su transparencia.'])});
+  // lumbar
+  v.add('lumbar',meshOf('spost_inf',COL.muscle,{r:{fiber:[1,1,0]}}),'lumbarm'); v.add('lumbar',meshOf('serratus',COL.muscle,{r:{fiber:[1,-.3,0]}}),'lumbarm');
+  for(const P of EX.polys.filter(p=>p.g==='lumbar')){ const pm=polyMesh(P.p,P.c,.7); pm.material.depthTest=false; pm.renderOrder=5; v.add('lumbar',pm,P.item); }
+  addExLabels(v,'lumbar');
+  v.item('lumbarm',{name:'Serrato anterior y serrato posteroinferior',color:'#a63d33',html:info('Mallas reales','El serrato posteroinferior y la 12.ª costilla forman el techo del triángulo lumbar superior.',[])});
+  v.item('grynfeltt',{name:'Triángulo lumbar superior (Grynfeltt-Lesshaft)',color:'#00b4d8',html:info('Esquema sobre la anatomía real','Invertido: 12.ª costilla y serrato posteroinferior (arriba), cuadrado lumbar/erector (medial) y borde posterior del oblicuo interno (lateral). Suelo: aponeurosis del transverso.',['Localización más frecuente de las hernias lumbares primarias.','Reparación: preperitoneal/retromuscular con solapamiento a 12.ª costilla, cresta y fascia toracolumbar; abordaje abierto o laparoscópico transabdominal.'])});
+  v.item('petit',{name:'Triángulo lumbar inferior (Petit)',color:'#f72585',html:info('Esquema sobre la anatomía real','Cresta ilíaca (base), borde posterior del oblicuo externo (lateral) y borde anterior del dorsal ancho (medial; no incluido en el modelo).',['Hernias lumbares inferiores, menos frecuentes que las superiores.'])});
+  v.item('diast',{name:'Diástasis de rectos',color:'#c4524a',html:info('Separación de los rectos sin defecto fascial','Ensanchamiento y adelgazamiento de la línea alba. EHS 2021 la define como ensanchamiento de la línea alba &gt; 2 cm (medición por ecografía o calibre 3 cm por encima del ombligo); clasificación EHS por anchura, posparto y hernia asociada. Pulsa «Diástasis» para simularla en el modelo.',['Asociación frecuente con hernias umbilicales/epigástricas (M2–M3).','EHS 2021: plicatura sin hernia asociada; reparación con malla si hay hernia de línea media (la plicatura puede bastar si es < 1 cm); fisioterapia puede considerarse antes.','Medir la distancia con la herramienta «Medir».'])});
+  // bones
+  const bone=physMat({roughness:.72,clearcoat:.05},{amp:.02,freq:3});
+  for(const id of ['ribs','sternum','xiphoid','spine','sacrum','hip']) v.add('bones',meshOf(id,COL.bone,{mat:bone,vary:.1}),'bones');
+  v.add('bones',meshOf('cart',COL.cart,{mat:bone}),'bones');
+  for(const id of ['psoas','iliacus','ql']) v.add('post',meshOf(id,COL.psoas,{r:{fiber:[0,1,0]}}),'post');
+  v.add('post',meshOf('diaphragm',COL.diaph,{m:{side:THREE.DoubleSide}}),'post');
+  for(const g of ['vessels','nerves','folds','rectus','lumbar']) addLines(v,g);
+  v.group('fine','Vaina posterior y fascia transversalis','#cfe3f2',false,1.7);
+  { const pm=physMat({vertexColors:false,color:0xf2ede3,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide,roughness:.4},{amp:.006}); v.add('fine',new THREE.Mesh(GEO.psheath,pm),'psheath');
+    const tm=physMat({vertexColors:false,color:0x9fc4dd,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide,roughness:.3},{amp:.006}); v.add('fine',new THREE.Mesh(GEO.tfascia,tm),'tfascia'); }
+  v.add('rectus',meshOf('pyramidalis',COL.muscle,{r:{fiber:[0,1,0]}}),'pyram');
+  v.item('psheath',{name:'Vaina posterior del recto (malla generada)',color:'#f2ede3',html:info('Por encima de la línea arcuata','Lámina posterior del OI + aponeurosis del TA, sobre la cara posterior real del recto.',['Suelo del espacio retromuscular; en TAR se incide 0,5–1 cm medial a la línea semilunar.'])});
+  v.item('tfascia',{name:'Fascia transversalis',color:'#9fc4dd',html:info('Capa fascial profunda (generada)','Entre el transverso/recto y la grasa preperitoneal. Por debajo de la arcuata es la única capa detrás del recto.',['En las hernias directas forma el pseudosaco.','El plano entre TA y fascia transversalis es el de la disección TAR.'])});
+  v.item('pyram',{name:'Músculo piramidal',color:'#a63d33',html:info('Inconstante (≈ 80–90 %)','Pequeño músculo triangular por delante del recto inferior, del pubis a la línea alba.',['Referencia de la línea media en incisiones de Pfannenstiel.'])});
+  v.item('perfor',{name:'Perforantes periumbilicales',color:'#c4211b',html:info('Trazado desde la epigástrica inferior real hasta la piel','Ramas musculocutáneas de la epigástrica inferior que atraviesan el recto y la vaina anterior alrededor del ombligo (base del colgajo DIEP).',['Preservarlas en la separación anterior (técnicas «perforator-sparing» o endoscópicas) reduce necrosis y dehiscencias cutáneas.'])});
+  v.item('latb',{name:'Borde anterior del dorsal ancho (trazado)',color:'#d9d9d9',html:info('El dorsal ancho no está en el modelo','Línea aproximada de su borde anterior: límite medial/posterior del triángulo de Petit.',[])});
+  // Huger zones
+  v.group('huger','Zonas de Huger (perfusión cutánea)','#ff9f1c',false,6.5);
+  { const ht=TAG.skin, hc={1:new THREE.Color(0xe63946),2:new THREE.Color(0x2a9d8f),3:new THREE.Color(0xf4a261)};
+    const hm=meshOf('skin',0,{clone:true,fn:(i,c)=>c.copy(hc[ht[i]]||hc[3]),vary:.05,m:{transparent:true,opacity:.75,depthWrite:false}}); hm.userData.classify=h=>'huger'+(ht[h.face.a]||3); v.add('huger',hm); }
+  const HG={1:['Zona I de Huger','Abdomen medio: arcada epigástrica profunda (epigástricas superior e inferior y sus perforantes).',['Las incisiones transversas/subcostales y la disección de colgajos amplios la desvascularizan: base del riesgo de necrosis en separación anterior.']],
+    2:['Zona II de Huger','Abdomen inferior: ramas de la ilíaca externa/femoral (epigástrica superficial, circunfleja ilíaca superficial, pudenda externa superficial).',['Comprometida por incisiones inguinales y de Pfannenstiel previas.']],
+    3:['Zona III de Huger','Flancos y abdomen lateral: intercostales, subcostales y lumbares.',['Incisiones subcostales y de flanco previas la interrumpen; relevante al planificar colgajos y abdominoplastia.']]};
+  for(const k in HG) v.item('huger'+k,{name:HG[k][0],color:['','#e63946','#2a9d8f','#f4a261'][k],html:info('Perfusión de la pared (Huger 1979)',HG[k][1],HG[k][2])});
+  // stoma
+  v.group('stoma','Estoma (paraestomal)','#c98f7f',false,4);
+  for(const L of (LINES.stoma||[])) v.add('stoma',tubeMesh(L),'stoma');
+  if(EX.pts.stoma) v.label('stoma',V(...EX.pts.stoma).add(V(2.2,0,1.5)),'Colostomía (a través del recto)',{item:'stoma'});
+  v.item('stoma',{name:'Estoma y hernia paraestomal',color:'#c98f7f',html:info('Estoma esquemático a través del recto izquierdo','El orificio se crea habitualmente a través del músculo recto. La hernia paraestomal es muy frecuente tras colostomía terminal.',
+    ['Prevención: EHS 2018 recomendó con fuerza malla profiláctica en la colostomía terminal; la actualización de 2023 revisó esa recomendación (ver «Guías»).','Reparación: Sugarbaker (lateraliza el asa bajo la malla), keyhole (orificio en la malla), Pauli/sándwich; abierta retromuscular (Stoppa modificado) o laparoscópica.'],
+    `<h3>Clasificación EHS paraestomal (Śmietański 2014)</h3><table><tr><th>I</th><td>≤ 5 cm sin hernia incisional concomitante</td></tr><tr><th>II</th><td>≤ 5 cm con hernia incisional</td></tr><tr><th>III</th><td>&gt; 5 cm sin hernia incisional</td></tr><tr><th>IV</th><td>&gt; 5 cm con hernia incisional</td></tr><tr><th>P/R</th><td>Primaria / recidivada</td></tr></table>`)});
+  // arcuate variants
+  v.group('variant','Variantes (línea arcuata alta/baja)','#ff7043',false,3.3);
+  for(const k of ['arc_hi_R','arc_hi_L','arc_lo_R','arc_lo_L']) if(EX.inc[k]&&EX.inc[k].length>1) v.add('variant',tubeMesh({p:EX.inc[k],r:.07,c:k.includes('hi')?0xff7043:0x8e44ad}),'arcvar');
+  v.item('obeso',{name:'Paciente con obesidad (simulación)',color:'#e3b49a',html:info('Deformación de la piel real','Aumenta el tejido subcutáneo y añade un pannus inferior.',['Trócares: más largos y en dirección al objetivo; el ombligo desciende y deja de ser referencia fiable.','Mayor riesgo de infección y seroma: valorar planos sin colgajos y cierre con técnica de puntos pequeños.','Panniculectomía asociada en reparaciones complejas seleccionadas.'])});
+  v.item('arcvar',{name:'Variantes de la línea arcuata',color:'#ff7043',html:info('Naranja: alta · morada: baja · azul: posición del modelo','La altura de la línea arcuata varía mucho entre pacientes (y a veces es una transición gradual).',['Cambia dónde desaparece la vaina posterior: importante al planificar la disección retromuscular inferior.'])});
+  // scales
+  v.item('escalas',{name:'Clasificaciones y escalas',color:'#5ab0ff',grp:'cortes',html:`<p class="sub">Referencias rápidas</p>
+   <h3>EHS hernia incisional</h3><table><tr><td>Localización M1–M5, L1–L4 · W1 &lt; 4 · W2 ≥ 4–10 · W3 &gt; 10 cm · longitud · recurrencia</td></tr></table>
+   <h3>EHS hernia ventral primaria</h3><table><tr><td>Epigástrica, umbilical (línea media); Spiegel, lumbar (lateral) · pequeña &lt; 2, mediana 2–4, grande &gt; 4 cm</td></tr></table>
+   <h3>EHS inguinal (Miserez 2007)</h3><table><tr><td>P/R · L (lateral), M (medial), F (femoral) · 0, 1 (≤ 1,5 cm), 2 (1,5–3 cm), 3 (&gt; 3 cm), X</td></tr></table>
+   <h3>Nyhus</h3><table><tr><th>I</th><td>Indirecta, anillo normal</td></tr><tr><th>II</th><td>Indirecta, anillo dilatado, pared posterior íntegra</td></tr><tr><th>IIIA</th><td>Directa</td></tr><tr><th>IIIB</th><td>Indirecta con destrucción de pared posterior (incl. deslizamiento, «en pantalón»)</td></tr><tr><th>IIIC</th><td>Femoral</td></tr><tr><th>IV</th><td>Recidivada (A directa, B indirecta, C femoral, D combinada)</td></tr></table>
+   <h3>VHWG modificada (Kanters 2012)</h3><table><tr><th>1</th><td>Bajo riesgo</td></tr><tr><th>2</th><td>Comorbilidad (tabaco, obesidad, EPOC, diabetes, inmunosupresión)</td></tr><tr><th>3</th><td>Contaminada (infección previa de herida, estoma, apertura del tubo digestivo)</td></tr></table>
+   <h3>Herida quirúrgica (CDC)</h3><table><tr><td>I limpia · II limpia-contaminada · III contaminada · IV sucia/infectada</td></tr></table>
+   <h3>Pérdida de domicilio</h3><table><tr><th>Tanaka</th><td>Volumen saco / volumen cavidad ≥ 25 %</td></tr><tr><th>Sabbagh</th><td>Volumen saco / (saco + cavidad) ≥ 20 %</td></tr></table><p class="steps">Calculables con modelos del paciente en «Mi paciente». Consenso Delphi (Parker 2020) para su definición.</p>
+   <h3>EHS paraestomal</h3><table><tr><td>I–IV según tamaño (≤/&gt; 5 cm) y hernia incisional concomitante · P/R</td></tr></table>`});
+  addExLabels(v,'nerves');
+  // refs
+  for(const r of EX.ref) v.add('refs',polyline(r,0xffffff,{op:.85}));
+  { const lm=physMat({vertexColors:false,color:COL.apo,roughness:.45,side:THREE.DoubleSide},{amp:.006}); const m=new THREE.Mesh(GEO.lalba,lm); m.userData.lalba=true; v.add('eo',m,'lalba'); const m2=new THREE.Mesh(GEO.lalba,lm); m2.userData.lalba=true; v.add('ehs',m2,'lalba'); }
+  v.item('lalba',{name:'Línea alba',color:'#e9e1d2',html:info('Ancho real aproximado','Decusación de las aponeurosis de ambos lados. Más ancha por encima del ombligo (≈ 1–2 cm) y estrecha por debajo (< 1 cm).',['En la diástasis se ensancha y adelgaza (pulsa «Diástasis»).','Cierre de laparotomía: puntos pequeños en la aponeurosis, no en la grasa.'])});
+  const P=EX.pts;
+  const um=new THREE.Mesh(new THREE.TorusGeometry(.7,.22,12,32),physMat({vertexColors:false,color:0x5b3a33})); um.position.set(...P.umb); um.position.z+=.25; v.add('refs',um);
+  for(const [t,p,d] of [['Xifoides',P.xi,[0,.8,0]],['Ombligo',P.umb,[2,.6,.4]],['Pubis',P.pub,[0,-1,0]],['EIAS',P.asis_R,[-1.3,-.6,.6]],['EIAS',P.asis_L,[1.3,-.6,.6]]]) v.label('refs',V(...p).add(V(...d)),t);
+  v.label('refs',V(...EX.ref[1][14]).add(V(-1.8,0,.3)),'Línea semilunar'); v.label('refs',V(...EX.ref[0][30]).add(V(1.2,0,.3)),'Línea alba');
+  { const al=LINES.rectus&&LINES.rectus[0]; if(al) v.label('rectus',V(...al.p[Math.floor(al.p.length/2)]).add(V(0,-.7,-.3)),'Línea arcuata',{item:'rsp'}); }
+  const cart=extreme('cart',(x,y,z)=>(Math.abs(x+9.5)<1.2&&z>0)?-y:-1e9); v.label('bones',cart.add(V(-.8,-.6,1)),'Reborde costal',{item:'bones'});
+  v.label('vessels',centroid('iea_R',(x,y)=>y>-12&&y<-8).add(V(-1.2,0,-.3)),'A. epigástrica inf.',{cls:'vsl',item:'eia'});
+  v.label('vessels',centroid('sea',(x,y)=>x<0).add(V(-1,0,-.3)),'A. epigástrica sup.',{cls:'vsl',item:'esa'});
+  v.label('nerves',V(...(LINES.nerves.find(l=>l.item==='ihii').p[3])).add(V(-.5,.8,.3)),'Iliohipogástrico',{cls:'nrv',item:'ihii'});
+  v.label('post',centroid('psoas',x=>x<0).add(V(-1,-2,2)),'Psoas',{item:'post'});
+
+  v.presets=[['Zonas EHS',['ehs','bones','refs']],['Con piel',['skin','eo','rectus','bones','refs']],['Capas musculares',['eo','rectus','io','ta','bones','refs']],['Plano retromuscular',['rectus','vessels','ta','nerves','bones']],['TAR / neurovascular',['ta','nerves','vessels','bones','post']],
+    ['Cara peritoneal',['perit','ta','rectus','folds','vessels'],{t:[0,-6,3],d:[0,.15,-1],w:30,h:40}],
+    ['Región lumbar',['eo','io','ta','lumbar','bones','post'],{t:[-9,-6,-3],d:[-.75,.1,-.65],w:26,h:30}]];
+  v.tools=['measure','defect','trocar','dia','skin','perit','obese','ct'];
+  v.presets.push(['Perfusión (Huger)',['huger','eo','bones','refs','vessels']],['Capas finas',['rectus','fine','ta','vessels','pyram','bones'],{t:[0,-6,4],d:[.6,.1,-.8],w:28,h:36}],['Estoma',['eo','rectus','stoma','bones','refs']]);
+  v.home=()=>fit(V(0,-4,4),V(.12,.04,1),34,46);
+  v.intro=`<h2>Pared abdominal anterolateral</h2>
+  <p class="sub">Piel, músculos, huesos, diafragma y vasos epigástricos son mallas anatómicas reales (BodyParts3D). Los nervios y el peritoneo están trazados/generados sobre ellas.</p>
+  <p>Usa los <b>preajustes</b> o las capas sueltas. <b>Despiece</b> separa las capas en profundidad: gira de lado para verlas. Con «Cara peritoneal» gira el modelo 180° para ver la pared desde dentro.</p>
+  <h3>Cortes axiales y planos de malla</h3>
+  <p><a data-item="corte_sup">Por encima de la línea arcuata</a> · <a data-item="corte_inf">Por debajo de la línea arcuata</a> · <a data-item="escalas">Clasificaciones y escalas</a></p>
+  <h3>EHS · hernia incisional</h3>
+  <table><tr><th>Localización</th><td>M1–M5 (media), L1–L4 (lateral)</td></tr><tr><th>Anchura</th><td>W1 &lt; 4 cm · W2 ≥ 4–10 cm · W3 &gt; 10 cm</td></tr><tr><th>Otros</th><td>Longitud, recurrencia, lado</td></tr></table>
+  <div class="tip">Uso docente: activa «Capas musculares» y mueve «Despiece» para explicar el orden de las capas; luego «Plano retromuscular» y «TAR» para la secuencia de una separación posterior.</div>
+  <div class="src">Anatomía 3D: BodyParts3D, © The Database Center for Life Science, CC BY-SA 2.1 JP. El ombligo y la línea arcuata se sitúan por proporciones estándar (variables entre pacientes). Fuentes clínicas: Muysoms FE et al. <i>Hernia</i> 2009;13:407–14 · Novitsky YW et al. <i>Am J Surg</i> 2012;204:709–16 · Ramírez OM et al. <i>Plast Reconstr Surg</i> 1990;86:519–26 · Deerenberg EB et al. <i>Lancet</i> 2015;386:1254–60.</div>`;
+  return v;
+}
+
+/* ======================= REGIÓN INGUINAL ======================= */
+function buildIngle(){
+  const v=new View('ingle');
+  v.group('wall','Pared (TA, recto, OI)','#8a332c',true);
+  v.group('bones','Pelvis','#e6d8bb',true);
+  v.group('ilig','Tracto iliopúbico y Cooper','#f1ece0',false);
+  v.group('zones','Zonas y triángulos','#ffb703',false);
+  v.group('ivessels','Vasos','#c4211b',true);
+  v.group('cord','Elementos del cordón','#d9c7f0',true);
+  v.group('inerves','Nervios','#f0d050',false);
+  v.group('retro','Psoas, ilíaco, vejiga','#9e3b33',true);
+  v.group('perit','Peritoneo y grasa','#e9dccf',true);
+  const T=(id,name,c,sub,lim,b,ex='')=>v.item(id,{name,color:c,html:info(sub,lim,b,ex)});
+  T('perit','Peritoneo parietal y grasa preperitoneal','#e9dccf','Lo que ve el laparoscopio antes de abrir','Lámina brillante a través de la cual se transparentan los vasos epigástricos, el ligamento umbilical medial, el deferente y los vasos espermáticos. Por debajo, la grasa preperitoneal.',['Ajusta «Peritoneo» para pasar de la visión real (opaco) a la disección (transparente).','TAPP: el colgajo peritoneal se abre 3–4 cm por encima del anillo profundo, del ligamento umbilical medial a la EIAS.']);
+  T('ureter','Uréter','#e8d27a','Malla real','Cruza los vasos ilíacos en el borde pélvico, medial a los vasos espermáticos.',['Fuera del campo habitual de la hernioplastia, pero referencia en disecciones extensas del espacio de Bogros/pelvis.']);
+  T('obtv','Vena obturatriz','#2e4fae','Malla real','Discurre por la pared pélvica lateral hacia el canal obturador; puede formar parte de una corona mortis venosa.',['Sangrado en la disección profunda de Cooper/obturador (hernia obturatriz).']);
+  T('hess','Triángulo de Hesselbach · fosa inguinal medial','#ff6b6b','Hernia inguinal directa','Límites en visión posterior: vasos epigástricos inferiores (lateral), borde lateral del recto (medial) y tracto iliopúbico (inferior).',['El defecto directo está cubierto por fascia transversalis («pseudosaco»).','En directas grandes puede invertirse y fijarse el pseudosaco a Cooper para reducir seroma.','Clasificación EHS inguinal: L/M/F, tamaño 1–3 en «dedos» (≈ 1,5 cm).']);
+  T('lat','Anillo inguinal profundo · fosa lateral','#ffd166','Hernia inguinal indirecta','Lateral a los vasos epigástricos. Convergen deferente (medial) y vasos espermáticos (lateral).',['Disecar y reducir el saco; en sacos largos, ligadura/sección proximal aceptable.','Buscar y reducir el lipoma de cordón.','Parietalizar el cordón para que la malla quede plana sin «keyhole».']);
+  T('fem','Anillo femoral','#ef476f','Hernia femoral','Bajo el tracto iliopúbico, medial a la vena ilíaca externa y por encima de Cooper; medialmente, ligamento lacunar.',['Más frecuente en mujeres; mayor riesgo de estrangulación.','La vía laparoscópica permite descartar hernia femoral oculta.']);
+  T('doom','Triángulo de la fatalidad («doom»)','#9d4edd','Zona vascular de máximo riesgo','Vértice en el anillo profundo, entre deferente (medial) y vasos espermáticos (lateral). Contiene vasos ilíacos externos.',['Ninguna fijación (tackers, grapas, suturas).','Disección roma; sin energía indiscriminada.']);
+  T('pain','Triángulo del dolor','#2ec4b6','Zona nerviosa de riesgo','Bajo el tracto iliopúbico, lateral a los vasos espermáticos. Contiene femorocutáneo lateral, rama femoral del genitofemoral y, profundo, el nervio femoral.',['Sin fijación penetrante por debajo del tracto iliopúbico en esta zona.']);
+  T('ipt','Tracto iliopúbico','#f1ece0','Banda de la fascia transversalis','Posterior y paralelo al ligamento inguinal (no visible por laparoscopia). Separa compartimento inguinal y femoral.',['Por encima, fijación segura (salvo vasos); por debajo y lateral, riesgo nervioso.']);
+  T('cooper','Ligamento de Cooper (pectíneo)','#f1ece0','Sobre el pecten del pubis (trazado sobre la pelvis real)','Desde la sínfisis lateralmente hasta la eminencia iliopectínea.',['Fijación medial clásica (tacker, sutura, adhesivo).','La malla debe sobrepasarlo para cubrir el anillo femoral.','Cuidado con la corona mortis.']);
+  T('epig','Vasos epigástricos inferiores','#c4211b','Desde la ilíaca externa real','Ascienden medial al anillo profundo en el pliegue umbilical lateral.',['Separan directa (medial) de indirecta (lateral).','Hematoma preperitoneal si se lesionan al crear el colgajo o al fijar.']);
+  T('corona','Corona mortis','#c4211b','Anastomosis obturatriz–epigástrica/ilíaca externa','Vaso arterial y/o venoso que cruza Cooper hacia el agujero obturador; presencia frecuente.',['Hemorragia difícil de controlar al disecar o fijar sobre Cooper: identificarla antes de colocar tackers mediales.']);
+  T('eiav','Arteria y vena ilíacas externas','#c4211b','Mallas reales','Dentro del triángulo de la fatalidad; vena medial a la arteria. Pasan bajo el ligamento inguinal como vasos femorales.',['Lesión potencialmente catastrófica.']);
+  T('vas','Conducto deferente','#d9c7f0','Elemento medial del cordón','Del anillo profundo hacia medial y caudal, cruzando por encima de los vasos ilíacos externos hacia la pelvis, lateral a la vejiga. En la mujer, ligamento redondo.',['Límite medial del triángulo de la fatalidad.','Parietalización suficiente para que el borde inferior de la malla no se enrolle.']);
+  T('gon','Vasos espermáticos (gonadales)','#8e6fd0','Elemento lateral del cordón','Del anillo profundo hacia craneal por delante del psoas.',['Límite lateral del triángulo de la fatalidad y medial del triángulo del dolor.']);
+  T('lfcn','N. femorocutáneo lateral','#f0d050','L2–L3','Sobre el ilíaco, sale cerca de la EIAS por debajo del ligamento.',['Lesión por fijación: meralgia parestésica.']);
+  T('fn','N. femoral','#f0d050','L2–L4','En el surco entre psoas e ilíaco, profundo a su fascia.',['Lesión rara pero grave (cuádriceps).']);
+  T('gfn','N. genitofemoral','#f0d050','L1–L2','Sobre el psoas; rama femoral bajo el tracto iliopúbico y rama genital hacia el anillo profundo.',['Causa de inguinodinia tras fijación o disección del cordón.']);
+  T('wall','Pared vista desde dentro (TA, recto)','#8a332c','Mallas reales','En TAPP, tras el colgajo peritoneal, se ve la fascia transversalis y el arco del TA/OI por encima del orificio miopectíneo.',['Fijación por encima del arco: segura (salvo vasos epigástricos).']);
+  T('pelvis','Pelvis','#e6d8bb','Malla real','Sínfisis, rama superior del pubis (pecten → Cooper), EIAS.',['La sínfisis es el límite medial de la disección del espacio de Retzius.']);
+  T('retro','Psoas, ilíaco y vejiga','#9e3b33','Mallas reales','El psoas y el ilíaco forman el suelo lateral; la vejiga ocupa el espacio de Retzius.',['Vaciar la vejiga antes de TEP/TAPP; riesgo de lesión vesical en hernias directas grandes y recidivas.']);
+  for(const id of ['ta_R','rectus_R','io_R','ta_L','rectus_L']) v.add('wall',meshOf(id,id.startsWith('ta')?0x8a332c:(id.startsWith('io')?0x9b3a31:0xb4473d),{m:{side:THREE.DoubleSide}}),'wall');
+  v.add('wall',meshOf('inglig_R',COL.lig),'ipt');
+  v.add('bones',meshOf('hip',COL.bone,{mat:physMat({roughness:.72,clearcoat:.05})}),'pelvis');
+  v.add('bones',meshOf('sacrum',COL.bone,{mat:physMat({roughness:.72,clearcoat:.05})}),'pelvis');
+  for(const id of ['eia']) v.add('ivessels',meshOf(id,COL.art,{vary:.05,m:{clearcoat:.6}}),'eiav');
+  for(const id of ['eiv']) v.add('ivessels',meshOf(id,COL.vein,{vary:.05,m:{clearcoat:.6}}),'eiav');
+  for(const id of ['psoas','iliacus']) v.add('retro',meshOf(id,COL.psoas),'retro');
+  v.add('retro',meshOf('bladder',COL.bladder),'retro');
+  for(const g of ['ilig','cord','ivessels','inerves']) for(const L of (LINES[g]||[])){ if(L.item==='gon') continue; v.add(g,tubeMesh(L),L.item); }
+  v.add('ivessels',meshOf('iea_R',COL.art,{vary:.05,m:{clearcoat:.6}}),'epig'); v.add('ivessels',meshOf('iev_R',COL.vein,{vary:.05,m:{clearcoat:.6}}),'epig');
+  v.add('cord',meshOf('testa_R',COL.art,{vary:.05,m:{clearcoat:.6}}),'gon'); v.add('cord',meshOf('testv_R',0x6b4fbf,{vary:.05,m:{clearcoat:.6}}),'gon');
+  v.add('retro',meshOf('ureters',0xe8d27a,{vary:.05}),'ureter'); v.add('ivessels',meshOf('obtv',COL.vein,{vary:.05}),'obtv');
+  { const perMat=physMat({transparent:true,opacity:.8,depthWrite:false,roughness:.22,clearcoat:1,clearcoatRoughness:.08,side:THREE.DoubleSide},{amp:.012,freq:1.4}); const ptag=TAG['periton'];
+    v.add('perit',meshOf('periton',0,{clone:true,mat:perMat,fn:(i,c)=>{ const f=ptag[i]/255; c.setRGB(.95-.06*f,.86-.03*f,.8-.35*f); },vary:.2}),'perit'); (window.PERMATS=window.PERMATS||[]).push(perMat); }
+  for(const P of EX.polys) v.add('zones',polyMesh(P.p,P.c,.5),P.item);
+  for(const g of ['zones','ilig','cord','ivessels','inerves']) addExLabels(v,g);
+  const ring=V(...EX.pts.ring);
+  v.label('wall',ring.clone().add(V(-1.5,4.5,-1)),'Arco del TA/OI',{item:'wall'});
+  v.label('ivessels',centroid('eia',x=>x<0).add(V(-.5,-3.5,0)),'A./V. ilíacas ext.',{cls:'vsl',item:'eiav'});
+  v.label('retro',centroid('bladder').add(V(0,1,-1)),'Vejiga (Retzius)',{item:'retro'});
+  v.label('retro',centroid('psoas',x=>x<0).add(V(0,-2,1.5)),'Psoas',{item:'retro'});
+  v.presets=[['Vista anterior (Lichtenstein)',['ant','bones'],{t:[-5.5,-20,4],d:[-.35,.15,1],w:16,h:14,up:[0,1,0]}],['Visión real (peritoneo)',['wall','bones','ivessels','cord','retro','perit'],{lap:1}],['Disección TAPP',['wall','bones','ilig','zones','ivessels','cord','inerves','retro']],['Solo triángulos',['wall','bones','ilig','zones','cord','retro']],['Vasos y nervios',['bones','ilig','ivessels','cord','inerves','retro']],['Sin pared',['bones','ilig','zones','ivessels','cord','inerves','retro']]];
+  v.tools=['measure','perit','fem','ct'];
+  v.group('ant','Capa anterior (Lichtenstein)','#e9e1d2',false);
+  { const eoA=meshOf('eo_R',0,{clone:true,fn:(i,c)=>c.setHex((TAG.eo_R[i]&15)?COL.apo:COL.muscle),vary:.12,r:{fiber:[1,-1,0],cut:[-6.6,-19.2,4.6,2.1,-.75]}}); v.add('ant',eoA,'eoant');
+    v.add('ant',meshOf('io_R',0,{fn:(i,c)=>c.setHex(TAG.io_R[i]?COL.apo:0x9b3a31),r:{fiber:[1,1,0]}}),'ioant');
+    v.add('ant',meshOf('rectus_R',0xb4473d,{r:{fiber:[0,1,0]}}),'ioant'); v.add('ant',meshOf('inglig_R',COL.lig),'ipt');
+    for(const L of (LINES.ant||[])) v.add('ant',tubeMesh(L),L.item);
+    for(const P of EX.polys.filter(p=>p.g==='ant')) v.add('ant',polyMesh(P.p,P.c,.85),P.item);
+    for(const id of ['ilii']) {}
+    for(const L of (LINES.nerves||[]).filter(l=>l.item==='ihii'&&l.p[0][0]<0)) v.add('ant',tubeMesh(L),'ihii');
+    const sr=new THREE.Mesh(new THREE.TorusGeometry(.9,.12,10,30),new THREE.MeshBasicMaterial({color:0xffffff})); sr.position.set(...EX.pts.sring); sr.position.z+=.5; v.add('ant',sr,'sring');
+    const pt=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),new THREE.MeshBasicMaterial({color:0xffffff})); pt.position.set(...EX.pts.ptub); v.add('ant',pt,'ptub');
+    addExLabels(v,'ant'); }
+  T('eoant','Aponeurosis del oblicuo externo (abierta)','#e9e1d2','Malla real con ventana sobre el conducto','En el abordaje anterior se abre en la dirección de sus fibras desde el anillo superficial, exponiendo el conducto inguinal.',['Preservar y apartar el ilioinguinal (bajo la aponeurosis) y el iliohipogástrico.','Cierre final sin estrechar el anillo superficial.']);
+  T('ioant','Oblicuo interno, transverso y recto (pared posterior desde delante)','#9b3a31','Mallas reales','El arco OI/TA forma el techo del conducto; la fascia transversalis su suelo (pared posterior).',['Lichtenstein: la malla se sutura al borde del recto/arco, sin tensión.']);
+  T('cordon','Cordón espermático','#e7b8a6','Trazado sobre la arteria testicular real','Contiene deferente, arteria y venas testiculares (plexo pampiniforme), arteria cremastérica, rama genital del genitofemoral y linfáticos; envuelto por fascia espermática externa, cremáster y fascia espermática interna. En la mujer, ligamento redondo.',['Disecar y aislar con cinta; buscar saco indirecto en la cara anteromedial y lipoma del cordón.','Evitar la ligadura en masa del plexo (orquitis isquémica, atrofia).']);
+  T('sring','Anillo inguinal superficial','#ffffff','Marcador','Apertura de la aponeurosis del OE por encima y lateral al tubérculo púbico (pilares medial y lateral).',[]);
+  T('ptub','Tubérculo púbico','#ffffff','Referencia ósea (pelvis real)','Inserción medial del ligamento inguinal.',['Lichtenstein: la malla debe sobrepasarlo 1,5–2 cm; sutura al tejido que lo recubre, no al periostio.']);
+  T('lacunar','Ligamento lacunar (de Gimbernat)','#f1ece0','Esquema','Expansión del ligamento inguinal hacia el pecten; límite medial del anillo femoral.',['Puede seccionarse para liberar una hernia femoral estrangulada (vigilar corona mortis).']);
+  T('shelving','Borde en repisa del ligamento inguinal (shelving edge)','#fff4dc','Trazado','Borde posterior enrollado del ligamento inguinal.',['Lichtenstein: el borde inferior de la malla se sutura con monofilamento continuo al shelving edge, desde el tubérculo púbico hasta lateral al anillo profundo.']);
+  T('conjoint','Tendón conjunto / arco del OI-TA','#c9a27a','Trazado sobre el oblicuo interno real','Fusión inconstante de las fibras inferiores del OI y TA hasta el pubis.',['Bassini/Shouldice lo aproximan al ligamento inguinal; en Lichtenstein se fija la malla por encima.']);
+  T('mesh_licht','Malla de Lichtenstein','#ffffff','Referencia','Malla ≈ 7 × 15 cm (recortada) que cubre la pared posterior desde el tubérculo púbico hasta 5 cm lateral al anillo profundo, con dos colas que rodean el cordón.',['Las colas se cruzan lateral al cordón y se fijan al shelving edge, recreando el anillo profundo sin estrecharlo.']);
+  // female
+  v.group('fem','Anatomía femenina','#e58fb0',false);
+  for(const [id,c,it] of [['f_roundlig_R',0xe9c7a0,'f_round'],['f_uterus',0xd88b8b,'f_uterus'],['f_ovaries',0xe8c9a8,'f_adnexa'],['f_tubes',0xe0a4a4,'f_adnexa'],['f_suspov',0xd2b48c,'f_adnexa'],['f_uta',COL.art,'f_uterus'],['f_utv',COL.vein,'f_uterus']]) v.add('fem',meshOf(id,c,{vary:.08}),it);
+  T('f_round','Ligamento redondo del útero','#e9c7a0','Malla real (HRA female, registrada sobre esta pelvis)','Ocupa el lugar del cordón: del cuerno uterino al anillo profundo, conducto inguinal y labio mayor.',['TAPP/TEP en la mujer: puede seccionarse si dificulta la parietalización o preservarse con disección cuidadosa.','Siempre descartar hernia femoral asociada en la mujer.']);
+  T('f_uterus','Útero y vasos uterinos','#d88b8b','Mallas reales (HRA female, registradas)','Registro aproximado sobre la pelvis masculina del modelo (pelvis femenina real más ancha).',[]);
+  T('f_adnexa','Ovarios, trompas y ligamento suspensorio (vasos ováricos)','#e8c9a8','Mallas reales (HRA female, registradas)','Los vasos ováricos discurren en el ligamento suspensorio, equivalentes a los gonadales.',[]);
+  v.maleObjs=v.pick.filter(o=>['vas','gon'].includes(o.userData.item));
+  v.up=V(0,0,1); v.home=()=>{ controls.target.copy(ring).add(V(1.3,-1.4,-.7)); camera.position.set(.5,0,1.5); controls.update(); };
+  v.intro=`<h2>Región inguinal derecha · visión TAPP/TEP</h2>
+  <p class="sub">Cámara dentro del abdomen, como el laparoscopio desde el ombligo: arriba la pared anterior; en el lado derecho, lo medial (vejiga, línea media) queda a la izquierda de la pantalla y lo lateral (EIAS) a la derecha. Pelvis, vasos ilíacos, psoas, vejiga y músculos son mallas reales; cordón, nervios y triángulos están trazados sobre ellos.</p>
+  <h3>Las cinco referencias</h3>
+  <table><tr><th>Fosa lateral</th><td>Anillo profundo, lateral a epigástricos → indirecta</td></tr><tr><th>Hesselbach</th><td>Medial a epigástricos → directa</td></tr><tr><th>Anillo femoral</th><td>Bajo el tracto iliopúbico, medial a la vena → femoral</td></tr><tr><th>Fatalidad</th><td>Entre deferente y espermáticos: vasos ilíacos</td></tr><tr><th>Dolor</th><td>Bajo el tracto iliopúbico, lateral a espermáticos: nervios</td></tr></table>
+  <div class="warn">Sin fijación por debajo del tracto iliopúbico salvo en el ligamento de Cooper.</div>
+  <h3>Orificio miopectíneo y malla</h3>
+  <p>El MPO (Fruchaud) está limitado por el arco del TA/OI, el borde del recto, el psoas-ilíaco y el pecten/Cooper. La malla (≥ 10 × 15 cm) debe cubrirlo entero con solapamiento, sobrepasar la sínfisis y quedar plana sobre el cordón parietalizado. «Critical view of the MPO»: sínfisis, Cooper, epigástricos, tracto iliopúbico, deferente y vasos parietalizados.</p>
+  <div class="src">Anatomía 3D: BodyParts3D, CC BY-SA 2.1 JP. Estructuras finas trazadas de forma esquemática sobre la anatomía real. Fuentes: HerniaSurge Group. <i>Hernia</i> 2018;22:1–165 · actualización HerniaSurge, <i>BJS Open</i> 2023;7:zrad080 · Daes J, Felix E. <i>Ann Surg</i> 2017;266:e1–e2.</div>`;
+  return v;
+}
+
+/* ======================= UNIÓN ESOFAGOGÁSTRICA ======================= */
+const SIE={1:['I','#3d8bfd'],2:['II','#b26be0'],3:['III','#f0a23c']};
+const REG={1:'cardia',2:'fundus',3:'cuerpo',4:'antro',5:'pyl',6:'eso_t',7:'eso_a'};
+function buildUEG(){
+  const v=new View('ueg');
+  v.group('organ','Esófago y estómago','#d99484',true);
+  v.group('sie','Siewert (color + regla)','#b26be0',true);
+  v.group('diaph','Diafragma','#a0443a',true);
+  v.group('liver','Hígado y vesícula','#7b2c22',true);
+  v.group('visc','Bazo, páncreas, duodeno','#e2b77f',true);
+  v.group('big','Aorta, tronco celíaco, cava','#c4211b',true);
+  v.group('art','Arterias gástricas','#c4211b',false);
+  v.group('vag','Nervios vagos','#f0d050',false);
+  v.group('nodes','Ganglios (JGCA)','#5fd18b',false);
+  v.group('retro','Riñones, suprarrenales, columna','#8b3a2e',false);
+  const T=(id,name,c,sub,lim,b,ex='')=>v.item(id,{name,color:c,html:info(sub,lim,b,ex)});
+  T('eso_t','Esófago torácico distal','#c9837a','Mediastino posterior · malla real','Por delante y a la derecha de la aorta en su trayecto inferior; cruza el hiato a nivel de T10.',['Disección mediastínica transhiatal en Siewert II/III y hernias grandes.','Riesgo de lesión pleural, vagal y aórtica.']);
+  T('eso_a','Esófago abdominal','#c9837a','Del hiato al cardias (≈ 2–3 cm)','Cubierto por la membrana frenoesofágica; forma parte de la barrera antirreflujo con el EEI, el ángulo de His y los pilares.',['Objetivo antirreflujo: ≥ 2–3 cm intraabdominales sin tensión; si no se logra → esófago corto (Collis).','Resecar la almohadilla grasa para exponer la unión real.']);
+  T('cardia','Cardias y ángulo de His','#d99484','Unión esofagogástrica (punto 0 de Siewert)','Unión del esófago tubular con la bolsa gástrica / extremo proximal de los pliegues gástricos. El ángulo de His es el ángulo agudo entre el borde izquierdo del esófago y el fundus.',['Fundoplicatura: disección completa del ángulo de His y del pilar izquierdo.','Ganglios 1 (derecho) y 2 (izquierdo).']);
+  T('fundus','Fundus gástrico','#d99484','Por encima de la horizontal del cardias','Bajo el hemidiafragma izquierdo; irrigado por vasos cortos y gástrica posterior.',['Material de la fundoplicatura (Nissen, Toupet, Dor).','Tras ligar la gástrica izquierda depende de la arcada gastroepiploica.']);
+  T('cuerpo','Cuerpo gástrico','#d99484','Entre fundus e incisura angular','Curvatura menor (arcada gástricas) y mayor (gastroepiploica).',['Tubulización en esofagectomía basada en la curvatura mayor y la gastroepiploica derecha.']);
+  T('antro','Antro gástrico','#d99484','De la incisura angular al píloro','Inervado por las ramas terminales de Latarjet («pata de ganso»).',['Vagotomía troncular sin drenaje → retraso del vaciamiento.','Ganglios 5 y 6.']);
+  T('pyl','Píloro','#d99484','Esfínter pilórico','Vena prepilórica de Mayo como referencia externa.',['Piloroplastia/piloromiotomía en esofagectomía (práctica variable).']);
+  T('I','Siewert I · adenocarcinoma de esófago distal','#3d8bfd','Clasificación de Siewert','Epicentro entre 1 y 5 cm por encima del cardias anatómico.',['Habitualmente sobre esófago de Barrett.','Esofagectomía transtorácica (Ivor Lewis/McKeown) con linfadenectomía mediastínica y abdominal superior.','TNM 8.ª ed.: esófago.']);
+  T('II','Siewert II · carcinoma del cardias','#b26be0','Clasificación de Siewert','Epicentro entre 1 cm por encima y 2 cm por debajo del cardias.',['Abordaje debatido: esofagectomía transtorácica o gastrectomía total ampliada transhiatal según la invasión esofágica.','Linfadenectomía: 1, 2, 3a, 7, 9, 11p, 19, 20 y mediastínica inferior según la invasión esofágica.','TNM 8.ª ed.: esófago (epicentro ≤ 2 cm en el estómago).']);
+  T('III','Siewert III · carcinoma subcardial','#f0a23c','Clasificación de Siewert','Epicentro entre 2 y 5 cm por debajo del cardias, infiltrando la UEG desde abajo.',['Gastrectomía total ampliada a esófago distal (transhiatal) con D2.','TNM 8.ª ed.: estómago (epicentro > 2 cm en el estómago).']);
+  T('hiato','Diafragma, hiato y pilares','#a0443a','Malla real del diafragma','El hiato esofágico (T10) está formado habitualmente por el pilar derecho; los pilares se unen por delante de la aorta en el ligamento arcuato medio, sobre el tronco celíaco. La membrana frenoesofágica (Laimer-Bertelli) fija la UEG al hiato.',
+    ['Hiatoplastia posterior con puntos no reabsorbibles; refuerzo con malla en hiatos grandes: controvertido (evitar malla permanente circunferencial por erosión).','Disección: abrir la pars flaccida, identificar el pilar derecho y seguirlo hasta la comisura posterior.','Síndrome del ligamento arcuato medio: compresión del tronco celíaco.'],
+    `<h3>Hernia de hiato</h3><table><tr><th>I</th><td>Deslizante: UEG por encima del diafragma (≈ 95%).</td></tr><tr><th>II</th><td>Paraesofágica pura: UEG en su sitio, fundus herniado.</td></tr><tr><th>III</th><td>Mixta: UEG y fundus por encima del hiato.</td></tr><tr><th>IV</th><td>Otro órgano (colon, bazo, epiplón, intestino).</td></tr></table>`);
+  T('liver','Hígado y vesícula','#7b2c22','Mallas reales','El lóbulo izquierdo cubre la cara anterior del estómago y la UEG.',['Separación del lóbulo izquierdo (retractor de Nathanson) para exponer el hiato.','Arteria hepática izquierda accesoria/reemplazada en la pars flaccida: valorar antes de seccionarla.']);
+  T('spleen','Bazo','#6a2438','Malla real','Unido al fundus por el ligamento gastroesplénico (vasos cortos).',['Lesión por tracción: causa clásica de esplenectomía incidental.','Esplenectomía para el grupo 10: no rutinaria (JGCA).']);
+  T('pancreas','Páncreas','#e2b77f','Malla real','Cuerpo y cola detrás del estómago (transcavidad); por su borde superior discurren la hepática común y la esplénica.',['Linfadenectomía 8a/11p sobre su borde superior: riesgo de fístula pancreática.']);
+  T('duod','Duodeno','#d4978a','Malla real','Bulbo duodenal tras el píloro; la gastroduodenal pasa por detrás.',['Úlcera duodenal posterior: sangrado por la gastroduodenal.']);
+  T('aorta','Aorta','#c4211b','Malla real','Atraviesa el hiato aórtico (T12) por detrás del ligamento arcuato medio.',['Relación posterior e izquierda con el esófago: riesgo en la disección del pilar izquierdo.']);
+  T('celiac','Tronco celíaco, hepática común y esplénica','#c4211b','Mallas reales','Trifurcación en gástrica izquierda, hepática común y esplénica, a nivel de T12–L1.',['Ganglios 7, 8a, 9, 11p alrededor de estos vasos.','Ligadura de la gástrica izquierda en su origen en la gastrectomía oncológica.']);
+  T('ivc','Vena cava inferior y porta-esplénica','#2e4fae','Mallas reales','La vena esplénica discurre por detrás del páncreas.',['Riesgo en la disección del pilar derecho y de la transcavidad.']);
+  T('retro','Riñones, suprarrenales y columna','#8b3a2e','Mallas reales','Referencias retroperitoneales.',[]);
+  T('lga','Arteria gástrica izquierda','#c4211b','Rama del tronco celíaco','Asciende en el pliegue gastropancreático hasta la curvatura menor junto al cardias, da la rama esofágica y desciende por la curvatura menor.',['Ligadura en su origen (grupo 7) en la gastrectomía y en el tubo gástrico.','Vena coronaria acompañante (a porta o esplénica).']);
+  T('eso_br','Rama esofágica de la gástrica izquierda','#c4211b','Esófago abdominal y distal','Asciende por el hiato junto al esófago.',['Sangrado en la disección hiatal anterior derecha.']);
+  T('lesser','Arcada de la curvatura menor','#c4211b','Gástrica izquierda + gástrica derecha','Entre las hojas del epiplón menor.',['Vagotomía supraselectiva: esqueletización respetando la pata de ganso.','Ganglios 3a y 3b.']);
+  T('pha','Hepática propia y gástrica derecha','#c4211b','Ligamento hepatoduodenal','La gástrica derecha suele nacer de la hepática propia y va al píloro.',['Ganglios 12a y 5.']);
+  T('gda','Arteria gastroduodenal','#c4211b','Rama de la hepática común','Por detrás de la 1.ª porción duodenal; da la gastroepiploica derecha.',['Pedículo del tubo gástrico (gastroepiploica derecha): preservarlo.']);
+  T('gea','Arcada gastroepiploica','#c4211b','Gastroepiploicas derecha e izquierda','En el epiplón mayor, a 1–2 cm de la curvatura mayor; la anastomosis puede ser incompleta.',['Esofagectomía: seccionar el epiplón fuera de la arcada.','Ganglios 4sb, 4d y 6.']);
+  T('sga','Vasos cortos','#c4211b','Esplénica → fundus','4–6 vasos en el ligamento gastroesplénico.',['Sección en fundoplicatura (si hay tensión) y gastrectomía total.','Ganglios 4sa.']);
+  T('pga','Arteria gástrica posterior','#c4211b','Rama inconstante de la esplénica','Cara posterior del fundus.',['Sangrado al crear la ventana retrogástrica.']);
+  T('va','Vago anterior (izquierdo)','#f0d050','Cara anterior del esófago','Da la rama hepática y el nervio anterior de Latarjet.',['Identificarlo y preservarlo en la fundoplicatura.']);
+  T('vp','Vago posterior (derecho)','#f0d050','Cara posterior del esófago, separado de la pared','Da la rama celíaca y el nervio posterior de Latarjet.',['La ventana retroesofágica puede dejarlo junto al esófago o separado; lo esencial es no seccionarlo.']);
+  T('hep','Rama hepática del vago anterior','#f0d050','Por la pars flaccida hacia el hilio','Inervación de vías biliares y píloro.',['Preservarla al abrir el epiplón menor.']);
+  T('cel','Rama celíaca del vago posterior','#f0d050','Hacia el plexo celíaco','Junto a la arteria gástrica izquierda.',['Se sacrifica habitualmente en la linfadenectomía del grupo 7.']);
+  T('lat','Nervios de Latarjet y «pata de ganso»','#f0d050','Inervación motora del antro y píloro','Paralelos a la curvatura menor, terminan en la pata de ganso antral.',['Vagotomía supraselectiva: respetar la pata de ganso.','Lesión en sleeve/fundoplicatura → gastroparesia.']);
+  T('grassi','Nervio criminal de Grassi','#f0d050','Rama del vago posterior al fundus','Pequeña rama alta a la cara posterior del fundus.',['No seccionarlo se ha asociado a recidiva ulcerosa tras vagotomía.']);
+  const NN={'8p':'Hepática común posterior','12b':'Lig. hepatoduodenal, a lo largo del colédoco','12p':'Lig. hepatoduodenal, detrás de la porta','13':'Cara posterior de la cabeza del páncreas','14v':'A lo largo de la vena mesentérica superior','16a1':'Paraaórticos del hiato aórtico','16a2':'Paraaórticos: del tronco celíaco a la vena renal izquierda','16b1':'Paraaórticos: de la vena renal izquierda a la AMI','16b2':'Paraaórticos: de la AMI a la bifurcación','1':'Paracardiales derechos','2':'Paracardiales izquierdos','3a':'Curvatura menor (ramas de la gástrica izquierda)','3b':'Curvatura menor (ramas de la gástrica derecha)','4sa':'Curvatura mayor, vasos cortos','4sb':'Curvatura mayor, gastroepiploica izquierda','4d':'Curvatura mayor, gastroepiploica derecha','5':'Suprapilóricos','6':'Infrapilóricos','7':'Arteria gástrica izquierda','8a':'Hepática común anterosuperior','9':'Tronco celíaco','10':'Hilio esplénico','11p':'Esplénica proximal','11d':'Esplénica distal','12a':'Lig. hepatoduodenal (a. hepática propia)','19':'Infradiafragmáticos','20':'Hiato esofágico','110':'Paraesofágicos torácicos inferiores','111':'Supradiafragmáticos','112':'Mediastínicos posteriores'};
+  v.item('nodes_tbl',{name:'Linfadenectomía gástrica (JGCA)',color:'#5fd18b',html:`<p class="sub">Japanese Gastric Cancer Treatment Guidelines 2021 (6.ª ed.) · <i>Gastric Cancer</i> 2023;26:1–25</p><table><tr><th></th><th>Total</th><th>Distal</th><th>Preserv. píloro</th><th>Proximal</th></tr><tr><th>D1</th><td>1–7</td><td>1, 3, 4sb, 4d, 5, 6, 7</td><td>1, 3, 4sb, 4d, 6, 7</td><td>1, 2, 3a, 4sa, 4sb, 7</td></tr><tr><th>D1+</th><td>D1 + 8a, 9, 11p</td><td>D1 + 8a, 9</td><td>D1 + 8a, 9</td><td>D1 + 8a, 9, 11p</td></tr><tr><th>D2</th><td>D1+ + 11d, 12a</td><td>D1+ + 11p, 12a</td><td>—</td><td>D1+ + 11d</td></tr></table><p style="margin-top:8px">Invasión esofágica (total y proximal): se añaden 19, 20 y 110 a la D2. Cáncer de la UEG con invasión esofágica &gt; 4 cm: 106recR, 107, 108, 109, 111 y 112. Grupo 10 / esplenectomía: desaconsejada sin invasión de curvatura mayor; débilmente recomendada si la hay.</p><p>Márgenes: T1, 2 cm; T2+, proximal ≥ 3 cm (Borrmann 1–2) o ≥ 5 cm (3–4), con biopsia intraoperatoria si no se alcanza.</p><div class="src">JGCA. Gastric Cancer 2023;26:1–25 (doi:10.1007/s10120-022-01331-8).</div>`});
+  for(const k in NN){ v.item('n'+k,{name:'Grupo '+k+' · '+NN[k],color:'#5fd18b',html:info('Estación ganglionar JGCA',null,null,`<p>${NN[k]}.</p><p><a data-item="nodes_tbl">→ Extensión D1/D1+/D2 por tipo de gastrectomía</a></p>`)});
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.3,18,14),new THREE.MeshPhysicalMaterial({color:0x5fd18b,roughness:.35,clearcoat:.6,envMap:ENV})); m.position.set(...EX.nodes[k]); v.add('nodes',m,'n'+k);
+    v.label('nodes',V(...EX.nodes[k]).add(V(0,.6,0)),k,{cls:'node',item:'n'+k}); }
+
+  // stomach / esophagus with tags
+  const sie={}; for(const k in SIE) sie[k]=new THREE.Color(SIE[k][1]);
+  const hl=new THREE.Color(0xffe08a);
+  for(const [id,base] of [['stomach',COL.stomach],['esophagus',COL.eso]]){
+    const tag=TAG[id]; const m=meshOf(id,base,{clone:true,vary:.1}); const b0=m.geometry.attributes.color.array.slice();
+    m.userData.classify=h=>{ const t=tag[h.face.a]; if(v.gmap.sie.on&&(t>>4)) return SIE[t>>4][0]; return REG[t&15]; };
+    v.add('organ',m);
+    v.repaint.push(sl=>{ const a=m.geometry.attributes.color.array, son=v.gmap.sie.on;
+      for(let i=0;i<tag.length;i++){ const s=tag[i]>>4, r=tag[i]&15; let R=b0[i*3],G=b0[i*3+1],B=b0[i*3+2];
+        if(son&&s){ const c=sie[s]; const dim=(sl&&['I','II','III'].includes(sl)&&SIE[s][0]!==sl); R=c.r*(dim?.35:1)+(dim?.2:0); G=c.g*(dim?.35:1)+(dim?.22:0); B=c.b*(dim?.35:1)+(dim?.25:0); }
+        else if(sl&&REG[r]===sl){ R=R*.45+hl.r*.55; G=G*.45+hl.g*.55; B=B*.45+hl.b*.55; }
+        a[i*3]=R; a[i*3+1]=G; a[i*3+2]=B; } m.geometry.attributes.color.needsUpdate=true; });
+  }
+  v.add('diaph',meshOf('diaphragm',COL.diaph,{m:{side:THREE.DoubleSide,transparent:true,opacity:.2,depthWrite:false}}),'hiato');
+  const livMat=physMat({transparent:true,opacity:.15,depthWrite:false});
+  v.add('liver',meshOf('liver',COL.liver,{mat:livMat}),'liver');
+  v.add('liver',meshOf('gallbladder',COL.gb,{mat:physMat({transparent:true,opacity:.5,depthWrite:false})}),'liver');
+  v.liverMats=[livMat];
+  v.add('visc',meshOf('spleen',COL.spleen),'spleen'); v.add('visc',meshOf('pancreas',COL.pancreas,{vary:.2}),'pancreas'); v.add('visc',meshOf('duodenum',COL.duod),'duod');
+  v.add('big',meshOf('aorta',COL.art,{vary:.05,m:{clearcoat:.6}}),'aorta');
+  for(const id of ['celiac','cha','lga','spla','sma']) v.add('big',meshOf(id,COL.art,{vary:.05,m:{clearcoat:.6}}),id==='lga'?'lga':'celiac');
+  for(const id of ['ivc','splv','smv']) v.add('big',meshOf(id,COL.vein,{vary:.05,m:{clearcoat:.6}}),'ivc');
+  for(const id of ['kidneys','adrenals']) v.add('retro',meshOf(id,id==='kidneys'?COL.kidney:COL.adrenal),'retro');
+  v.add('retro',meshOf('spine',COL.bone,{mat:physMat({roughness:.72,clearcoat:.05})}),'retro');
+  for(const id of ['renala','renalv']) v.add('retro',meshOf(id,id==='renala'?COL.art:COL.vein,{vary:.05}),'retro');
+  const SKIP=['lga','lesser','eso_br','pha','gda'];
+  for(const L of (LINES.art||[])) if(!SKIP.includes(L.item)) v.add('art',tubeMesh(L),L.item);
+  for(const L of (LBYG.art||[])) if(!SKIP.includes(L.item)) v.label('art',L.p,L.t,{item:L.item,cls:L.cls||''});
+  addLines(v,'vag'); addExLabels(v,'vag');
+  const AM=(id,item)=>v.add('art',meshOf(id,COL.art,{vary:.05,m:{clearcoat:.6}}),item), VM=(id,item)=>v.add('art',meshOf(id,COL.vein,{vary:.05,m:{clearcoat:.6}}),item);
+  AM('lga40','lga'); AM('rga','rga'); AM('gda40','gda'); AM('pha40','pha'); AM('cha40','celiac'); AM('esoart','eso_br'); AM('iphra','iphr');
+  VM('portal','venas'); VM('lgv','venas'); VM('rgv','venas'); VM('gev','venas');
+  T('rga','Arteria gástrica derecha','#c4211b','Malla real','Nace habitualmente de la hepática propia y recorre la curvatura menor desde el píloro hasta anastomosarse con la gástrica izquierda.',['Ligadura en su origen en la gastrectomía distal/total (grupo 5).']);
+  T('iphr','Arterias frénicas inferiores','#c4211b','Mallas reales','Irrigan la cara inferior del diafragma; la izquierda da ramas esofagocardiales.',['Ganglios del grupo 19 a lo largo de ellas.','Sangrado en la disección del hiato y del pilar izquierdo.']);
+  T('venas','Vena porta y venas gástricas','#2e4fae','Mallas reales','Vena gástrica izquierda (coronaria), gástrica derecha y gastroepiploicas, tributarias de la porta/esplénica/mesentérica superior.',['La vena coronaria se liga junto a la arteria gástrica izquierda en la gastrectomía.','Varices gástricas/esofágicas en hipertensión portal: riesgo hemorrágico en cirugía hiatal.']);
+  v.label('art',centroid('lga40').add(V(.8,.5,.6)),'A. gástrica izq.',{cls:'vsl',item:'lga'});
+  v.label('art',centroid('rga').add(V(-.8,.6,.6)),'A. gástrica der.',{cls:'vsl',item:'rga'});
+  v.label('art',centroid('gda40').add(V(-1.6,-.5,.5)),'A. gastroduodenal',{cls:'vsl',item:'gda'});
+  v.label('art',centroid('pha40').add(V(-1.6,.6,.3)),'A. hepática propia',{cls:'vsl',item:'pha'});
+  v.label('art',centroid('portal').add(V(-1.4,0,.3)),'Vena porta',{cls:'',item:'venas'});
+  // omenta
+  v.group('omento','Epiplones','#f2d27a',false);
+  const omMat=physMat({vertexColors:false,color:0xf0cf7a,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide,roughness:.35,clearcoat:.6},{amp:.03,freq:1.2});
+  v.add('omento',new THREE.Mesh(GEO.omen_min,omMat),'omen_min'); v.add('omento',new THREE.Mesh(GEO.omen_maj,omMat.clone()),'omen_maj');
+  T('omen_min','Epiplón menor','#f2d27a','Esquema sobre la anatomía real','Del hígado a la curvatura menor: pars flaccida (fina, sobre el lóbulo caudado) y pars condensa (hacia el hiato). Contiene la arcada de la curvatura menor, la rama hepática del vago y, a veces, una arteria hepática izquierda accesoria/reemplazada.',['Nissen/hiatoplastia: se abre la pars flaccida para acceder al pilar derecho.','Gastrectomía: sección cerca del hígado (ganglios 1, 3) tras valorar la hepática izquierda accesoria.']);
+  T('omen_maj','Epiplón mayor','#f2d27a','Esquema sobre la anatomía real','Cuelga de la curvatura mayor; contiene la arcada gastroepiploica.',['D2: omentectomía (tumores T3–T4) o preservación del epiplón distal a la arcada (T1–T2).','Esofagectomía: sección fuera de la arcada gastroepiploica.']);
+  v.label('omento',V(...EX.pts.les_top).add(V(-2.2,.8,.6)),'Epiplón menor',{item:'omen_min'});
+  // hiatal hernia morph targets
+  v.add('visc',meshOf('colon_tr',COL.colon,{clone:true,vary:.15}),'colon_tr'); T('colon_tr','Colon transverso','#c79a7a','Malla real','Por debajo de la curvatura mayor (ligamento gastrocólico).',['En la hernia de hiato tipo IV puede ascender al tórax.']);
+  v.repaint.push(()=>paintBarrett());
+  v.hh=[...v.gmap.organ.obj.children.filter(o=>o.userData.mesh),...v.gmap.visc.obj.children.filter(o=>o.userData.mesh==='colon_tr')];
+  // ruler along esophageal axis
+  const R=EX.ruler, ax=V(...R.ax), o=V(...EX.pts.egj).add(V(-3.0,0,.6)), sd=V(-1,0,0).addScaledVector(ax,-ax.dot(V(-1,0,0))).normalize();
+  const at=t=>o.clone().addScaledVector(ax,t);
+  v.add('sie',polyline([at(-6),at(6.5)],0xffffff,{dt:false}));
+  for(let t=-6;t<=6;t++){ const w=t%5===0?.6:.3; v.add('sie',polyline([at(t),at(t).addScaledVector(sd,w)],0xffffff,{dt:false})); }
+  for(const [a,b,k] of [[1,5,1],[-2,1,2],[-5,-2,3]]){ const m=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,b-a,10),new THREE.MeshBasicMaterial({color:SIE[k][1],depthTest:false})); m.position.copy(at((a+b)/2)).addScaledVector(sd,-.45); m.quaternion.setFromUnitVectors(V(0,1,0),ax); m.renderOrder=5; v.add('sie',m,SIE[k][0]); v.label('sie',at((a+b)/2).addScaledVector(sd,-1.3),SIE[k][0],{cls:'zone',item:SIE[k][0]}); }
+  for(const [t,s] of [[5,'+5'],[1,'+1'],[0,'0 · UEG'],[-2,'−2'],[-5,'−5']]) v.label('sie',at(t).addScaledVector(sd,1.9),s+' cm',{cls:'ruler'});
+  const egj=V(...EX.pts.egj);
+  const zr=new THREE.Mesh(new THREE.TorusGeometry(1.15,.06,10,48),new THREE.MeshBasicMaterial({color:0xffffff})); zr.position.copy(egj).addScaledVector(ax,.15); zr.quaternion.setFromUnitVectors(V(0,0,1),ax); v.add('sie',zr,'cardia');
+  // labels
+  const P=EX.pts;
+  v.label('organ',egj.clone().add(V(1.6,-.6,1.4)),'Cardias',{item:'cardia'});
+  v.label('organ',V(...P.fundus).add(V(.8,1,0)),'Fundus',{item:'fundus'});
+  v.label('organ',V(...P.gre_mid).add(V(1,0,1)),'Cuerpo',{item:'cuerpo'});
+  v.label('organ',V(...P.antrum).add(V(0,-.5,1.5)),'Antro',{item:'antro'});
+  v.label('organ',V(...P.pyl).add(V(-.5,.5,.8)),'Píloro',{item:'pyl'});
+  v.label('organ',V(...P.inc).add(V(.3,.4,1.2)),'Incisura angular',{item:'antro'});
+  v.label('organ',egj.clone().addScaledVector(ax,2).add(V(-1.4,0,.6)),'Esófago abdominal',{item:'eso_a'});
+  v.label('organ',egj.clone().addScaledVector(ax,9).add(V(-1.4,0,.4)),'Esófago torácico',{item:'eso_t'});
+  v.label('diaph',egj.clone().addScaledVector(ax,3.6).add(V(2.2,0,0)),'Hiato / pilares',{item:'hiato'});
+  v.label('liver',centroid('liver').add(V(-3,1,3)),'Hígado (lób. izq. transparente)',{item:'liver'});
+  v.label('visc',centroid('spleen').add(V(1.5,0,0)),'Bazo',{item:'spleen'});
+  v.label('visc',centroid('pancreas').add(V(0,-.8,1)),'Páncreas',{item:'pancreas'});
+  v.label('visc',centroid('duodenum').add(V(-2,-1,1)),'Duodeno',{item:'duod'});
+  v.label('big',centroid('aorta',(x,y)=>y>17&&y<20).add(V(1.6,0,0)),'Aorta',{cls:'vsl',item:'aorta'});
+  v.label('big',V(...P.cel).add(V(1.6,-.9,.6)),'Tronco celíaco',{cls:'vsl',item:'celiac'});
+  v.label('big',centroid('spla').add(V(0,.9,0)),'A. esplénica',{cls:'vsl',item:'celiac'});
+  v.label('big',centroid('cha').add(V(-1.6,0,.3)),'A. hepática común',{cls:'vsl',item:'celiac'});
+  v.tools=['measure','liver','hh','ct'];
+  v.group('medias','Mediastino (esofagectomía)','#7aa6c2',false);
+  v.group('variant','Variantes','#ff7043',false);
+  for(const [id,c,it] of [['azygos',COL.vein,'azygos'],['hemiaz',COL.vein,'azygos'],['thaorta',COL.art,'aorta'],['arch',COL.art,'aorta'],['trachea',0xd8d0c0,'trachea'],['heart_la',0xa0303a,'heart'],['heart_ra',0x8a2c40,'heart'],['heart_v',0xb03a3a,'heart'],['pulmv',0x9b3a5a,'heart'],['pulma',0x4466bb,'heart'],['svc',COL.vein,'azygos'],['bronchart',COL.art,'trachea']]) v.add('medias',meshOf(id,c,{vary:.08,m:{clearcoat:.5}}),it);
+  for(const L of (LINES.medias||[])) v.add('medias',tubeMesh(L),L.item);
+  for(const L of (LINES.variant||[])) v.add('variant',tubeMesh(L),L.item); addExLabels(v,'variant');
+  for(const L of (LINES.diaph||[])) v.add('diaph',tubeMesh(L),L.item);
+  for(const L of (LINES.liver||[])) v.add('liver',tubeMesh(L),L.item); addExLabels(v,'liver');
+  v.add('visc',meshOf('biliary',0x6aa84f,{vary:.05}),'biliary');
+  { const bm=physMat({vertexColors:false,color:0xb6d7ff,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide},{amp:.004}); v.add('omento',new THREE.Mesh(GEO.bursa,bm),'bursa'); }
+  { const hc=V(...EX.pts.hc), ax=V(...EX.pts.ax); const g=new THREE.CylinderGeometry(1.25,2.3,1.6,40,1,true); const pm=new THREE.Mesh(g,physMat({vertexColors:false,color:0xf1ece0,transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide},{amp:.004})); pm.position.copy(hc); pm.quaternion.setFromUnitVectors(V(0,1,0),ax); v.add('diaph',pm,'pem'); }
+  v.label('medias',V(...EX.pts.az_top).add(V(-1.5,-4,0)),'Vena ácigos',{item:'azygos'}); v.label('medias',V(...EX.pts.td_mid).add(V(1.6,0,-.5)),'Conducto torácico',{item:'tduct'});
+  v.label('medias',centroid('trachea').add(V(2.5,4,0)),'Tráquea / bronquios',{item:'trachea'}); v.label('medias',centroid('heart_la').add(V(3,0,1)),'Aurícula izquierda',{item:'heart'});
+  v.label('diaph',V(...EX.pts.hc).add(V(-3,-1.6,-1)),'Pilar derecho',{item:'crus'}); v.label('diaph',V(...EX.pts.hc).add(V(2.8,-1.6,-1)),'Pilar izquierdo',{item:'crus'});
+  v.label('omento',V(...EX.pts.inc).add(V(2,1.5,-3)),'Transcavidad',{item:'bursa'}); v.label('art',V(...EX.pts.treitz).add(V(1.2,-.6,.5)),'Ángulo de Treitz',{item:'treitz'});
+  T('azygos','Vena ácigos, hemiácigos y cava superior','#2e4fae','Mallas reales','La ácigos asciende a la derecha del esófago y desemboca en la cava superior por encima del bronquio derecho.',['Ivor Lewis: sección/ligadura del cayado de la ácigos para movilizar el esófago torácico.']);
+  T('tduct','Conducto torácico','#f4f1d8','Trazado entre ácigos y aorta','Asciende desde la cisterna del quilo entre aorta y ácigos, detrás del esófago, y cruza a la izquierda a nivel de T5–T4.',['Quilotórax tras esofagectomía: ligadura profiláctica/terapéutica supradiafragmática en masa entre aorta y ácigos.']);
+  T('rln','Nervio laríngeo recurrente izquierdo','#f0d050','Trazado','Rodea el cayado aórtico y asciende en el surco traqueoesofágico.',['Linfadenectomía de los recurrentes (106rec) y anastomosis cervical (McKeown): riesgo de parálisis de cuerda vocal.']);
+  T('vthor','Vagos torácicos','#f0d050','Trazado sobre el esófago real','Forman el plexo esofágico; se continúan con los troncos anterior y posterior.',['En la esofagectomía se seccionan; la vagotomía condiciona el vaciamiento del tubo gástrico.']);
+  T('trachea','Tráquea, bronquios y arterias bronquiales','#d8d0c0','Mallas reales','La carina y el bronquio principal izquierdo son anteriores al esófago.',['Riesgo de lesión de la pars membranosa en la disección subcarínica (ganglios 107).']);
+  T('heart','Corazón (aurícula izquierda) y vasos pulmonares','#a0303a','Mallas reales','La aurícula izquierda está inmediatamente anterior al esófago distal.',['Disección esofágica a ese nivel: arritmias por manipulación; ganglios 108/110.']);
+  T('aorta','Aorta torácica y cayado','#c4211b','Mallas reales','',[]);
+  T('crus','Pilares del diafragma','#9a3f33','Trazado sobre el diafragma y la columna reales','Pilar derecho (más grande, forma ambos bordes del hiato) e izquierdo; se unen por delante de la aorta (ligamento arcuato medio).',['Hiatoplastia posterior; superficie del hiato (HSA) con la calculadora del panel.','Variantes: hiato formado por ambos pilares en una minoría de pacientes.']);
+  T('pem','Membrana frenoesofágica (Laimer-Bertelli)','#f1ece0','Esquema','Hojas ascendente y descendente que fijan la UEG al hiato.',['Se secciona circunferencialmente para movilizar el esófago.']);
+  T('trilig','Ligamento triangular izquierdo','#f1ece0','Trazado','Fija el lóbulo hepático izquierdo al diafragma.',['Su sección permite rechazar el lóbulo izquierdo y mejorar la exposición del hiato (cuidado con la vena frénica/hepática izquierda).']);
+  T('bursa','Transcavidad de los epiplones (bolsa omental)','#b6d7ff','Esquema por detrás del estómago real','Espacio entre la cara posterior del estómago y el páncreas; se accede por el ligamento gastrocólico o la pars flaccida.',['Bursectomía (opcional en gastrectomía).','Ventana retrogástrica en el bypass y en la funduplicatura.']);
+  T('henle','Tronco gastrocólico de Henle','#2e4fae','Trazado entre venas reales (gastroepiploica dcha., cólica dcha., VMS)','Confluencia de la vena gastroepiploica derecha y venas cólicas en la VMS, por delante de la cabeza del páncreas. Muy variable.',['D2 (grupo 6) y CME derecha: ligadura de la gastroepiploica derecha en su desembocadura; desgarros = sangrado difícil.']);
+  T('alha','Arteria hepática izquierda accesoria / reemplazada','#ff7043','Variante trazada','Nace de la gástrica izquierda y cruza la pars flaccida hacia el hilio izquierdo; presente en una proporción no despreciable de pacientes.',['Valorar en el TAC antes de cirugía hiatal o gástrica; su ligadura suele tolerarse si es accesoria, pero puede causar isquemia si es reemplazada.']);
+  T('biliary','Vía biliar (colédoco, hepáticos, cístico)','#6aa84f','Mallas reales','',['Referencia para los ganglios 12b y para la sección duodenal en la gastrectomía.']);
+  T('treitz','Ángulo de Treitz','#d4978a','Punto del duodeno real','Unión duodenoyeyunal.',['Bypass gástrico: medición de las asas biliopancreática y alimentaria desde aquí.']);
+  T('barrett','Esófago de Barrett · Praga C&M','#ff8a65','Proyección de la extensión sobre el esófago real','C: extensión circunferencial; M: extensión máxima (lengüetas), en cm desde la UEG. Usa los controles del panel para dibujarlo.',['Riesgo de adenocarcinoma (Siewert I); seguimiento endoscópico según longitud y displasia.'],
+    `<h3>Válvula de Hill (endoscopia en retroflexión)</h3><table><tr><th>I</th><td>Pliegue prominente bien adaptado al endoscopio</td></tr><tr><th>II</th><td>Pliegue presente, se abre ocasionalmente con la respiración</td></tr><tr><th>III</th><td>Pliegue escaso, cardias abierto</td></tr><tr><th>IV</th><td>Sin pliegue, cardias abierto; hernia de hiato</td></tr></table>`);
+  v.presets=[['Siewert',['organ','sie','diaph','visc','big']],['Mediastino',['organ','medias','diaph','big'],{t:[1,18,-3],d:[-.6,.1,-.8],w:24,h:30}],['Variantes',['organ','variant','art','big','liver']],['Epiplones',['organ','omento','art','visc','big','liver']],['Hiato',['organ','diaph','big','retro']],['Vascularización',['organ','art','big','visc']],['Inervación vagal',['organ','vag','diaph','big']],['Ganglios JGCA',['organ','nodes','art','big','visc']],['Todo',['organ','diaph','art','vag','nodes','visc','big','liver']]];
+  v.home=()=>fit(egj.clone().add(V(1.8,-3.2,0)),V(.1,.06,1),22,26);
+  v.intro=`<h2>Unión esofagogástrica</h2>
+  <p class="sub">Esófago, estómago, diafragma, hígado, bazo, páncreas, duodeno, aorta, tronco celíaco, hepática común y esplénica son mallas reales. Arcadas gástricas, vagos y ganglios están trazados sobre ellas.</p>
+  <p>El control <b>Hígado</b> ajusta su transparencia. La regla sigue el eje del esófago distal, con el 0 en la unión esofagogástrica.</p>
+  <h3>Siewert (epicentro respecto al cardias)</h3>
+  <table><tr><td><span class="tag" style="background:#3d8bfd"></span><a data-item="I">I</a></td><td>+1 a +5 cm · esófago distal</td></tr><tr><td><span class="tag" style="background:#b26be0"></span><a data-item="II">II</a></td><td>+1 a −2 cm · cardias</td></tr><tr><td><span class="tag" style="background:#f0a23c"></span><a data-item="III">III</a></td><td>−2 a −5 cm · subcardial</td></tr></table>
+  <h3>Otras tablas</h3><p><a data-item="hiato">Tipos de hernia de hiato</a> · <a data-item="nodes_tbl">Linfadenectomía D1/D2 (JGCA)</a></p>
+  <div class="tip">Para preparar una gastrectomía: «Vascularización» → «Ganglios JGCA» y toca cada estación. Para un Nissen: «Hiato» + «Inervación vagal».</div>
+  <div class="src">Anatomía 3D: BodyParts3D, © DBCLS, CC BY-SA 2.1 JP. Arcadas, vagos y ganglios: trazado esquemático sobre la anatomía real. Fuentes: Siewert JR, Stein HJ. <i>Br J Surg</i> 1998;85:1457–9 · AJCC 8.ª ed. (2017) · JGCA 6.ª ed. <i>Gastric Cancer</i> 2023;26:1–25 · SAGES hiatal hernia guidelines, <i>Surg Endosc</i> 2024;38:4765–75 · ESGE Barrett, <i>Endoscopy</i> 2023;55:1124–46. Resúmenes y calculadoras en «Guías · calculadoras · informe».</div>`;
+  return v;
+}
+
+/* ======================= COLORRECTAL ======================= */
+function buildCR(){
+  const v=new View('cr');
+  v.group('colon','Colon','#c79a7a',true);
+  v.group('recto','Recto','#c98f7f',true);
+  v.group('meso','Mesorrecto','#f2d27a',true);
+  v.group('mesent','Mesenterio y mesocolon','#f0d48a',false);
+  v.group('vasos','Vasos mesentéricos','#c4211b',true);
+  v.group('cr_nerves','Nervios autonómicos y Toldt','#f0d050',true);
+  v.group('uro','Uréteres, gonadales, vejiga, próstata','#e8d27a',true);
+  v.group('pelvis','Pelvis (coxales)','#e6d8bb',true);
+  v.group('sacro','Sacro y columna','#e6d8bb',true);
+  v.group('floor','Suelo pélvico','#a63d33',false);
+  v.group('retro','Retroperitoneo (duodeno, páncreas, riñones, psoas)','#d4978a',false);
+  const T=(id,name,c,sub,lim,b,ex='')=>v.item(id,{name,color:c,html:info(sub,lim,b,ex)});
+  const bone=physMat({roughness:.72,clearcoat:.05},{amp:.02,freq:3});
+  const colMat=(c)=>({vary:.14,r:{amp:.02,freq:2.5}});
+  for(const [id,item] of [['colon_asc','colon'],['colon_tr','colon'],['colon_desc','colon'],['sigmoid','sigma'],['appendix','colon']]) v.add('colon',meshOf(id,COL.colon,colMat()),item);
+  v.add('recto',meshOf('rectum',0xc98f7f,{vary:.12,r:{amp:.02,freq:2.5}}),'rectum');
+  const mrMat=physMat({vertexColors:false,color:0xf2c96e,transparent:true,opacity:.5,depthWrite:false,roughness:.35,clearcoat:.7,side:THREE.DoubleSide},{amp:.04,freq:1.5});
+  v.add('meso',new THREE.Mesh(GEO.mesorectum,mrMat),'mesorectum');
+  const msMat=physMat({vertexColors:false,color:0xf0d48a,transparent:true,opacity:.35,depthWrite:false,roughness:.35,clearcoat:.6,side:THREE.DoubleSide},{amp:.03,freq:1.2});
+  v.add('mesent',new THREE.Mesh(GEO.mesentery,msMat),'mesent'); v.add('mesent',new THREE.Mesh(GEO.mesocolon,msMat.clone()),'mesent');
+  const A=(id,item)=>v.add('vasos',meshOf(id,COL.art,{vary:.05,m:{clearcoat:.6}}),item), W=(id,item)=>v.add('vasos',meshOf(id,COL.vein,{vary:.05,m:{clearcoat:.6}}),item);
+  A('aorta','aorta'); W('ivc','aorta'); A('cia40','iliacs'); W('civ40','iliacs'); A('iia','iliacs'); W('iiv','iliacs'); A('eia','iliacs'); W('eiv','iliacs');
+  A('sma40','sma'); W('smv40','sma'); A('icA','sma'); W('icV','sma'); A('rcA','sma'); W('rcV','sma'); A('mcA','mca'); W('mcV','mca'); A('margA','marg');
+  A('ima','ima'); W('imv','imv'); A('lcA','lca'); W('lcV','lca'); A('sigA','sigv'); W('sigV','sigv'); A('srA','sra'); W('srV','sra');
+  for(const L of (LINES.cr_nerves||[])) v.add('cr_nerves',tubeMesh(L),L.item);
+  for(const P of EX.polys.filter(p=>p.g==='cr_nerves')) v.add('cr_nerves',polyMesh(P.p,P.c,.55),P.item);
+  addExLabels(v,'cr_nerves');
+  v.add('uro',meshOf('ureters',0xe8d27a,{vary:.05}),'ureter'); v.add('uro',meshOf('testa_R',COL.art,{vary:.05}),'gonad'); v.add('uro',meshOf('testa_L',COL.art,{vary:.05}),'gonad'); v.add('uro',meshOf('testv_R',0x6b4fbf,{vary:.05}),'gonad'); v.add('uro',meshOf('testv_L',0x6b4fbf,{vary:.05}),'gonad');
+  v.add('uro',meshOf('bladder',COL.bladder),'bladder'); v.add('uro',meshOf('prostate',0xc9a27a),'prost'); v.add('uro',meshOf('sv',0xd8b48a),'prost'); v.add('uro',meshOf('kidneys',COL.kidney),'kidney');
+  v.add('pelvis',meshOf('hip',COL.bone,{mat:bone}),'pelvis'); for(const id of ['sacrum','spine']) v.add('sacro',meshOf(id,COL.bone,{mat:bone}),'pelvis');
+  for(const id of ['puborect','pubococ','iliococ','coccyg','eas']) v.add('floor',meshOf(id,COL.muscle,{r:{fiber:[0,0,1]}}),'floor');
+  for(const id of ['obint','piri']) v.add('floor',meshOf(id,COL.muscle,{r:{fiber:[0,1,0]}}),'floor');
+  v.add('retro',meshOf('duodenum',COL.duod),'retro'); v.add('retro',meshOf('pancreas',COL.pancreas,{vary:.2}),'retro'); v.add('retro',meshOf('psoas',COL.psoas,{r:{fiber:[0,1,0]}}),'retro');
+  const P=EX.pts;
+  const mk=(p,c)=>{ const m=new THREE.Mesh(new THREE.TorusGeometry(.55,.12,10,30),new THREE.MeshBasicMaterial({color:c,depthTest:false})); m.position.set(...p); m.renderOrder=6; return m; };
+  v.add('vasos',mk(P.ima_o,0x00e5ff),'hightie'); v.add('vasos',mk([P.lc_o[0],P.lc_o[1]-1.2,P.lc_o[2]],0x7cff6b),'lowtie');
+  T('colon','Colon (ascendente, transverso, descendente) y apéndice','#c79a7a','Mallas reales','Ascendente y descendente son retroperitoneales (fusionados por la fascia de Toldt); transverso y sigma tienen meso.',['Movilización medial-a-lateral: entre la fascia de Toldt y la fascia prerrenal (Gerota), preservando uréter y gonadales.','Descenso del ángulo esplénico para anastomosis sin tensión.']);
+  T('sigma','Colon sigmoide','#c79a7a','Malla real (BodyParts3D 3.0)','Intraperitoneal, con mesosigma; la raíz del mesosigma cruza los vasos ilíacos izquierdos y el uréter izquierdo.',['Fosa intersigmoidea: el uréter izquierdo está justo debajo.']);
+  T('rectum','Recto','#c98f7f','Malla real','≈ 12–15 cm desde el margen anal; el tercio superior tiene peritoneo anterior y lateral, el medio solo anterior, el inferior es extraperitoneal.',['Unión rectosigmoidea: fin de las tenias / promontorio sacro (definición de consenso: plano del promontorio en la RM).','Margen distal: ≥ 1 cm (tumores bajos) y ≥ 5 cm de mesorrecto en tumores altos (PME).']);
+  T('mesorectum','Mesorrecto y fascia mesorrectal (plano de la ETM)','#f2c96e','Esquema sobre la anatomía real','Tejido graso con vasos y ganglios rectales envuelto por la fascia mesorrectal (propia). Más grueso posterior y lateralmente; se adelgaza hacia el hiato del elevador.',['Escisión total del mesorrecto (Heald): disección en el «holy plane» entre la fascia mesorrectal y la fascia presacra/parietal, preservando nervios hipogástricos y plexos.','Margen circunferencial (CRM) afectado si tumor ≤ 1 mm de la fascia mesorrectal.','Anterior: fascia de Denonvilliers entre recto y vesículas/próstata (o vagina).']);
+  T('mesent','Mesenterio y mesocolon transverso','#f0d48a','Mallas reales','Raíz del mesenterio desde el ángulo duodenoyeyunal a la fosa ilíaca derecha.',['Escisión completa del mesocolon (CME) con ligadura central en hemicolectomía derecha.']);
+  T('aorta','Aorta y cava inferior','#c4211b','Mallas reales','Bifurcación aórtica a la altura de L4.',[]);
+  T('iliacs','Vasos ilíacos comunes, internos y externos','#c4211b','Mallas reales','El uréter cruza la bifurcación ilíaca.',['Pared pélvica lateral: referencia en la ETM y en la linfadenectomía lateral.']);
+  T('sma','AMS, VMS, ileocólica y cólica derecha','#c4211b','Mallas reales','Tronco gastrocólico de Henle (no incluido) y variabilidad de la cólica derecha.',['CME derecha: ligadura central de ileocólicos y cólicos derechos sobre la VMS.']);
+  T('mca','Arteria y vena cólicas medias','#c4211b','Mallas reales','Rama de la AMS para el colon transverso.',['Ligadura en colectomía transversa / hemicolectomía derecha ampliada.']);
+  T('marg','Arteria marginal (de Drummond)','#c4211b','Malla real','Arcada paracólica que une los territorios de AMS y AMI.',['Garantiza la perfusión del colon izquierdo tras ligar la AMI; punto débil en el ángulo esplénico (punto de Griffiths).']);
+  T('ima','Arteria mesentérica inferior','#c4211b','Malla real','Nace de la aorta a nivel de L3; ramas: cólica izquierda, sigmoideas y rectal superior.',['Ligadura alta (marcador azul): a 1–2 cm del origen para no lesionar el plexo hipogástrico superior; maximiza ganglios (grupo 253).','Ligadura baja (marcador verde): distal a la cólica izquierda; preserva la perfusión del colon proximal.']);
+  T('imv','Vena mesentérica inferior','#2e4fae','Malla real','Asciende lateral a la AMI, junto al ángulo duodenoyeyunal, hacia la esplénica.',['Ligadura en el borde inferior del páncreas para ganar longitud en el descenso del ángulo esplénico.']);
+  T('lca','Arteria y vena cólicas izquierdas','#c4211b','Mallas reales','Primera rama de la AMI.',['Su preservación (ligadura baja) se discute en pacientes con riesgo vascular.']);
+  T('sigv','Arterias y venas sigmoideas','#c4211b','Mallas reales','Ramas de la AMI hacia el sigma.',[]);
+  T('sra','Arteria y vena rectales superiores','#c4211b','Mallas reales','Continuación de la AMI en el mesorrecto.',['Se divide en el plano de la ETM con el mesorrecto.']);
+  T('hightie','Punto de ligadura alta de la AMI','#00e5ff','Marcador','1–2 cm del origen aórtico.',['Evitar la ligadura a ras de aorta: plexo hipogástrico superior → disfunción eyaculatoria/vesical.']);
+  T('lowtie','Punto de ligadura baja','#7cff6b','Marcador','Distal al origen de la cólica izquierda.',[]);
+  T('shp','Plexo hipogástrico superior','#f0d050','Trazado esquemático','Delante de la bifurcación aórtica y del promontorio.',['Lesión en la ligadura alta de la AMI o en la disección del promontorio → eyaculación retrógrada/disfunción vesical.']);
+  T('hgn','Nervios hipogástricos','#f0d050','Trazado esquemático','Del plexo hipogástrico superior descienden por la pared pélvica posterolateral, por fuera de la fascia mesorrectal, hacia el plexo hipogástrico inferior.',['ETM: entrar en el «holy plane» por detrás del mesorrecto a nivel del promontorio y apartarlos lateralmente.']);
+  T('ihp','Plexo hipogástrico inferior (pélvico)','#f0d050','Esquema','Pared lateral de la pelvis, a los lados del recto; recibe los nervios esplácnicos pélvicos (S2–S4).',['Lesión en la disección lateral (ligamentos laterales) → disfunción sexual y vesical.']);
+  T('toldt','Línea blanca de Toldt','#ffffff','Trazado sobre el colon real','Reflexión peritoneal lateral del colon ascendente y descendente.',['Abordaje lateral-a-medial: incisión en la línea de Toldt. En el medial-a-lateral se completa al final.']);
+  T('ureter','Uréteres','#e8d27a','Mallas reales','Cruzan los vasos ilíacos en el borde pélvico; el izquierdo bajo la raíz del mesosigma.',['Identificarlo siempre antes de ligar la AMI y al movilizar el sigma.']);
+  T('gonad','Vasos gonadales','#6b4fbf','Mallas reales','Laterales al uréter en el retroperitoneo.',['Quedan por detrás del plano de Toldt: no levantarlos con el mesocolon.']);
+  T('bladder','Vejiga','#e3bba2','Malla real','',[]); T('prost','Próstata y vesículas seminales','#c9a27a','Mallas reales','Anteriores al recto, separadas por la fascia de Denonvilliers.',['Disección anterior de la ETM: por delante o detrás de Denonvilliers según la localización tumoral; riesgo de los paquetes neurovasculares.']);
+  T('kidney','Riñones','#8b3a2e','Mallas reales','',[]); T('pelvis','Pelvis, sacro y columna','#e6d8bb','Mallas reales','Promontorio sacro: referencia de la unión rectosigmoidea.',[]);
+  T('floor','Suelo pélvico (elevador del ano, coccígeo, esfínter externo, obturador interno, piriforme)','#a63d33','Mallas reales','Puborrectal, pubococcígeo e iliococcígeo forman el elevador del ano.',['Amputación abdominoperineal extraelevadora (ELAPE): resección del elevador junto con el recto.','Anastomosis coloanal / ISR en tumores muy bajos.']);
+  T('retro','Duodeno, páncreas y psoas','#d4978a','Mallas reales','Planos posteriores de la movilización del colon.',['Lesión duodenal en la movilización del ángulo hepático.']);
+  v.label('recto',centroid('rectum').add(V(-2.6,0,1)),'Recto',{item:'rectum'}); v.label('colon',centroid('sigmoid').add(V(1.5,1,1.5)),'Sigma',{item:'sigma'});
+  v.label('colon',centroid('colon_desc').add(V(1.8,0,.5)),'Colon descendente',{item:'colon'}); v.label('colon',centroid('colon_asc').add(V(-1.8,0,.5)),'Colon ascendente',{item:'colon'});
+  v.label('meso',centroid('mesorectum',(x,y,z)=>z<-1).add(V(3,-1,-1)),'Mesorrecto (ETM)',{item:'mesorectum'});
+  v.label('vasos',V(...P.ima_o).add(V(2.6,.6,.5)),'AMI · ligadura alta',{cls:'vsl',item:'hightie'}); v.label('vasos',V(...P.lc_o).add(V(2.8,-1.6,.5)),'Ligadura baja',{cls:'vsl',item:'lowtie'});
+  v.label('vasos',centroid('imv').add(V(1.6,1,0)),'VMI',{item:'imv'}); v.label('vasos',centroid('lcA').add(V(1,1,.5)),'A. cólica izq.',{cls:'vsl',item:'lca'});
+  v.label('vasos',centroid('sigA').add(V(1,0,.5)),'Aa. sigmoideas',{cls:'vsl',item:'sigv'}); v.label('vasos',centroid('srA').add(V(-1.6,0,.5)),'A. rectal sup.',{cls:'vsl',item:'sra'});
+  v.label('vasos',centroid('margA').add(V(0,1.2,.5)),'A. marginal',{cls:'vsl',item:'marg'});
+  v.label('uro',centroid('ureters',(x,y)=>x>0&&y<-8&&y>-12).add(V(1.3,0,0)),'Uréter izq.',{item:'ureter'});
+  v.presets=[['Colon y vasos',['colon','recto','vasos','uro','pelvis','sacro','retro']],['AMI / VMI',['colon','recto','vasos','uro','pelvis','cr_nerves'],{t:[1,-6,0],d:[.25,.1,1],w:18,h:18}],
+    ['Pelvis y ETM',['recto','meso','vasos','cr_nerves','uro','sacro'],{t:[0,-17,-2],d:[-1,.2,.15],w:20,h:20}],['Nervios autonómicos',['colon','recto','cr_nerves','uro','pelvis','vasos'],{t:[0,-14,0],d:[0,.2,1],w:18,h:18}],
+    ['Suelo pélvico',['colon','recto','meso','floor','pelvis','sacro','uro'],{t:[0,-22,-2],d:[-.6,-.4,.7],w:18,h:16}]];
+  v.tools=['measure','fem','ct'];
+  v.group('fem','Anatomía femenina','#e58fb0',false);
+  for(const [id,c,it] of [['f_uterus',0xd88b8b,'f_uterus'],['f_vagina',0xd99a9a,'f_uterus'],['f_ovaries',0xe8c9a8,'f_adnexa'],['f_tubes',0xe0a4a4,'f_adnexa'],['f_broadlig',0xf0c8c8,'f_adnexa'],['f_roundlig_R',0xe9c7a0,'f_adnexa'],['f_roundlig_L',0xe9c7a0,'f_adnexa'],['f_suspov',0xd2b48c,'f_adnexa'],['f_uta',COL.art,'f_uterus'],['f_utv',COL.vein,'f_uterus']]) v.add('fem',meshOf(id,c,{vary:.08,m:id==='f_broadlig'?{transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide}:{}}),it);
+  T('f_uterus','Útero, vagina y vasos uterinos','#d88b8b','Mallas reales (HRA female, registradas)','En la mujer el plano anterior de la ETM es el tabique rectovaginal.',['Riesgo de lesión vaginal en la disección anterior baja y en grapado circular.']);
+  T('f_adnexa','Anejos, ligamento ancho y redondo','#e8c9a8','Mallas reales (HRA female, registradas)','Los vasos ováricos (ligamento suspensorio) cruzan el uréter en el borde pélvico.',['Identificar el uréter antes de ligar el ligamento infundibulopélvico.']);
+  v.maleObjs=v.pick.filter(o=>o.userData.item==='prost'||(o.userData.item==='gonad'));
+  v.home=()=>fit(V(0,-8,0),V(.08,.05,1),30,34);
+  v.intro=`<h2>Colorrectal</h2>
+  <p class="sub">Colon, recto, mesenterio, vasos mesentéricos, uréteres, gonadales, pelvis y suelo pélvico son mallas reales (BodyParts3D). Mesorrecto, nervios autonómicos y línea de Toldt están trazados sobre ellas.</p>
+  <h3>Puntos clave</h3>
+  <ul><li><a data-item="ima">AMI</a>: ligadura <a data-item="hightie">alta</a> vs <a data-item="lowtie">baja</a>.</li><li><a data-item="mesorectum">ETM</a> en el «holy plane» preservando los <a data-item="hgn">nervios hipogástricos</a>.</li><li><a data-item="ureter">Uréter</a> y <a data-item="gonad">gonadales</a> por detrás del plano de <a data-item="toldt">Toldt</a>.</li><li><a data-item="imv">VMI</a> y <a data-item="marg">arcada marginal</a> para el descenso del ángulo esplénico.</li></ul>
+  <div class="src">Anatomía 3D: BodyParts3D 3.0/4.0 (DBCLS), CC BY-SA 2.1 JP / CC BY 4.0. Mesorrecto, plexos y Toldt: esquemáticos. Fuentes: Heald RJ. <i>Br J Surg</i> 1982;69:613–6 · Hohenberger W et al. <i>Colorectal Dis</i> 2009;11:354–64 (CME) · D'Souza N et al. <i>Lancet Oncol</i> 2019;20:e612–e618 (unión rectosigmoidea).</div>`;
+  return v;
+}
+
+/* ======================= MI PACIENTE ======================= */
+function buildPac(){
+  const v=new View('pac'); v.group('pmodels','Modelos del paciente','#5ab0ff',true);
+  v.tools=['measure']; v.presets=[]; v.files=[];
+  v.home=()=>{ const b=new THREE.Box3().setFromObject(v.gmap.pmodels.obj); if(b.isEmpty()){ fit(V(0,0,0),V(0,0,1),30,30); return; } const c=b.getCenter(new THREE.Vector3()), s=b.getSize(new THREE.Vector3()); fit(c,V(0,.05,1),Math.max(s.x,s.z)*1.1,s.y*1.1); };
+  v.intro=`<h2>Mi paciente</h2>
+  <p class="sub">Abre aquí los modelos 3D segmentados del TAC de un paciente. Los archivos se procesan en este navegador y no se suben a ningún servidor.</p>
+  <div class="tool"><label>Archivos STL / OBJ / PLY <input id="pacFiles" type="file" multiple accept=".stl,.obj,.ply"></label>
+  <label><span>Unidades en mm (convertir a cm)</span><input id="pacMM" type="checkbox" checked></label><label><span>Orientación TC (eje Z = craneal, RAS/LPS)</span><input id="pacZ" type="checkbox" checked></label><div id="pacList" class="steps"></div><div id="pacRes"></div></div>
+  <h3>Visor de TC / RM (DICOM o NIfTI)</h3>
+  <div class="tool"><label>Carpeta DICOM <input id="nvDir" type="file" webkitdirectory multiple></label><label>Archivo NIfTI / NRRD / MHA <input id="nvFile" type="file" accept=".nii,.gz,.nrrd,.mha,.mhd,.mgz"></label>
+  <div><button class="btn" data-nvs="0">Axial</button><button class="btn" data-nvs="1">Coronal</button><button class="btn" data-nvs="2">Sagital</button><button class="btn" data-nvs="3">Multiplanar</button><button class="btn" data-nvs="4">3D</button></div>
+  <div><button class="btn" data-nvw="40,400">Abdomen</button><button class="btn" data-nvw="-600,1500">Pulmón</button><button class="btn" data-nvw="400,1800">Hueso</button><button class="btn" data-nvw="60,160">Hígado</button><button class="btn" data-nvm>Medir en la imagen</button><button class="btn" data-nvtog>Imagen ⇄ modelos 3D</button></div>
+  <div id="nvMsg" class="steps">La conversión DICOM se hace en este navegador (dcm2niix en WebAssembly, con anonimización por defecto). Rueda: cambiar de corte · arrastrar: ventana o medida.</div></div>
+  <h3>Cómo obtener los modelos</h3>
+  <ol style="padding-left:18px;margin:4px 0"><li>Exporta el TAC anonimizado en DICOM.</li><li>Segméntalo con <b>3D Slicer</b> (gratuito) + extensión <b>TotalSegmentator</b> (músculos, vísceras, vasos, huesos) o segmenta el defecto a mano con «Segment Editor».</li><li>Exporta cada segmento como STL/OBJ («Export to files»).</li><li>Ábrelos aquí y usa <b>Medir</b> para anchura/longitud del defecto o distancias.</li></ol>
+  <div class="warn">Datos de salud: usa siempre estudios anonimizados y sigue la normativa de tu centro (RGPD). Los modelos se quedan en este dispositivo.</div>`;
+  return v;
+}
+function wirePac(){
+  const inp=document.getElementById('pacFiles'); if(!inp) return; const v=views.pac;
+  const vol=g=>{ const p=g.attributes.position.array, I=g.index?g.index.array:null; let V6=0; const n=I?I.length:p.length/3; for(let t=0;t<n;t+=3){ const a=(I?I[t]:t)*3,b=(I?I[t+1]:t+1)*3,c=(I?I[t+2]:t+2)*3;
+      V6+=p[a]*(p[b+1]*p[c+2]-p[b+2]*p[c+1])-p[a+1]*(p[b]*p[c+2]-p[b+2]*p[c])+p[a+2]*(p[b]*p[c+1]-p[b+1]*p[c]); } return Math.abs(V6/6); };
+  const res=()=>{ const el=document.getElementById('pacRes'); if(!el) return; const sac=v.files.filter(f=>f.role==='saco'), cav=v.files.filter(f=>f.role==='cavidad'), def=v.files.filter(f=>f.role==='defecto'); let h='';
+    if(def.length){ for(const f of def){ const b=new THREE.Box3().setFromBufferAttribute(f.mesh.geometry.attributes.position), s3=b.getSize(new THREE.Vector3()); const W=s3.x, L=s3.y; h+=`<p>Defecto «${f.name}»: <b>W ${W.toFixed(1)} cm</b> (transversal) × <b>L ${L.toFixed(1)} cm</b> (craneocaudal) → ${W<4?'W1':W<=10?'W2':'W3'}</p>`; } }
+    if(sac.length&&cav.length){ const S=sac.reduce((a,f)=>a+vol(f.mesh.geometry),0), C=cav.reduce((a,f)=>a+vol(f.mesh.geometry),0); h+=`<table><tr><th>Volumen saco</th><td>${(S).toFixed(0)} cm³</td></tr><tr><th>Volumen cavidad</th><td>${C.toFixed(0)} cm³</td></tr><tr><th>Tanaka (saco/cavidad)</th><td><b>${(100*S/C).toFixed(1)} %</b> ${S/C>=.25?'<span class="bad">≥ 25 %: pérdida de domicilio</span>':''}</td></tr><tr><th>Sabbagh (saco/total)</th><td><b>${(100*S/(S+C)).toFixed(1)} %</b> ${S/(S+C)>=.2?'<span class="bad">≥ 20 %</span>':''}</td></tr></table><p class="steps">Requiere mallas cerradas (segmentaciones exportadas de 3D Slicer).</p>`; }
+    el.innerHTML=h||'<p class="steps">Asigna a cada modelo un papel (defecto, saco, cavidad) para calcular W/L y los índices de pérdida de domicilio.</p>'; };
+  const list=()=>{ const el=document.getElementById('pacList'); if(!el) return; el.innerHTML=v.files.map((f,i)=>`<label><span><input type="checkbox" data-i="${i}" ${f.mesh.visible?'checked':''}> <i style="display:inline-block;width:10px;height:10px;background:#${f.color.toString(16).padStart(6,'0')}"></i> ${f.name}</span><select data-r="${i}">${['—','defecto','saco','cavidad'].map(r=>`<option ${f.role===r?'selected':''}>${r}</option>`).join('')}</select><input type="range" min=".1" max="1" step=".05" value="${f.mesh.material.opacity}" data-o="${i}"></label>`).join('');
+    el.querySelectorAll('select[data-r]').forEach(c=>c.onchange=()=>{ v.files[+c.dataset.r].role=c.value; res(); });
+    el.querySelectorAll('input[data-i]').forEach(c=>c.onchange=()=>{v.files[+c.dataset.i].mesh.visible=c.checked;});
+    el.querySelectorAll('input[data-o]').forEach(c=>c.oninput=()=>{const m=v.files[+c.dataset.o].mesh.material; m.opacity=+c.value; m.transparent=m.opacity<1; m.depthWrite=m.opacity>=1; m.needsUpdate=true;}); res(); };
+  list(); wireNV();
+  inp.onchange=async()=>{ const pal=[0xd99484,0xe6d8bb,0xc4211b,0x2e4fae,0xa63d33,0xf0d050,0x7b2c22,0x6a2438,0xe2b77f,0x8b3a2e];
+    const mm=document.getElementById('pacMM').checked;
+    for(const f of inp.files){ const ext=f.name.split('.').pop().toLowerCase(); const buf=await f.arrayBuffer(); let g=null;
+      try{ if(ext==='stl') g=new STLLoader().parse(buf); else if(ext==='ply') g=new PLYLoader().parse(buf); else if(ext==='obj'){ const o=new OBJLoader().parse(new TextDecoder().decode(buf)); const gs=[]; o.traverse(c=>{ if(c.isMesh) gs.push(c.geometry); }); g=gs[0]; } }catch(e){ console.warn(e); }
+      if(!g) continue; if(mm) g.scale(.1,.1,.1); if(document.getElementById('pacZ').checked) g.rotateX(-Math.PI/2); if(!g.index){ const n=g.attributes.position.count; g.setIndex([...Array(n).keys()]); } g.computeVertexNormals(); g.computeBoundsTree();
+      const color=pal[v.files.length%pal.length];
+      const m=new THREE.Mesh(g,physMat({vertexColors:false,color,side:THREE.DoubleSide},{amp:.01,freq:2})); const pid='pf'+v.files.length; v.add('pmodels',m,pid);
+      v.item(pid,{name:f.name,color:'#'+color.toString(16).padStart(6,'0'),html:info('Modelo importado',`${g.attributes.position.count} vértices.`,['Usa «Medir» para tomar distancias sobre la superficie.'])});
+      v.files.push({name:f.name,mesh:m,color,role:'—'}); }
+    v.home(); list(); };
+}
+
+function reportAuto(){ const L=[]; const S=toolState.sum, D=toolState.defects;
+  if(S&&D&&D.length){ const W=S.Wtot<4?'W1':S.Wtot<=10?'W2':'W3'; L.push(`Simulador: ${D.length} defecto(s) ${[...new Set(D.map(d=>d.zone||'—'))].join(', ')} · ${W} · W ${S.Wtot.toFixed(1)} × L ${S.Ltot.toFixed(1)} cm · malla propuesta ${S.MW.toFixed(0)} × ${S.ML.toFixed(0)} cm (solapamiento ${toolState.ov} cm)`); }
+  if(cur.id==='ueg'){ L.push(`Barrett (simulado) C${BAR.C}M${BAR.M}`); const A=.5*HSA.a*HSA.b*Math.sin(HSA.g*Math.PI/180); L.push(`Superficie del hiato estimada ${A.toFixed(1)} cm² (pilares ${HSA.a}/${HSA.b} cm, ${HSA.g}°)`); }
+  if(cur.id==='pac'&&views.pac.files.length) L.push('Modelos del paciente: '+views.pac.files.map(f=>f.name+(f.role!=='—'?' ('+f.role+')':'')).join(', '));
+  return L; }
+
+const NV_CDN=new URL('./lib/niivue/index.js',location.href).href, DCM_CDN=new URL('./lib/dcm2niix/',location.href).href;
+let NVL=null, nv=null, nvMeasure=false;
+function nvStageShow(on){ nvVis=on; document.getElementById('nvStage').style.display=on?'block':'none'; if(on&&nv) nv.resizeListener&&nv.resizeListener(); }
+async function nvGet(){ if(!NVL) NVL=await import(NV_CDN); nvStageShow(true);
+  if(!nv){ nv=new NVL.Niivue({backColor:[0,0,0,1],show3Dcrosshair:true,isRadiologicalConvention:true,multiplanarForceRender:true}); }
+  const cv=document.getElementById('nvCanvas'); if(nv.canvas!==cv) await nv.attachToCanvas(cv); return nv; }
+async function nvShow(file,name){ const n=await nvGet(); for(const v of [...n.volumes]) n.removeVolume(v);
+  const img=await NVL.NVImage.loadFromFile({file,name:name||file.name,colormap:'gray'}); n.addVolume(img); nvWin(40,400); n.setSliceType(NVL.SLICE_TYPE.MULTIPLANAR); return img; }
+function nvWin(c,w){ if(!nv||!nv.volumes.length) return; const v=nv.volumes[0]; v.cal_min=c-w/2; v.cal_max=c+w/2; nv.updateGLVolume(); }
+function wireNV(){ const msg=t=>{ const m=document.getElementById('nvMsg'); if(m) m.textContent=t; };
+  const f=document.getElementById('nvFile'), d=document.getElementById('nvDir'); if(!f) return;
+  f.onchange=async()=>{ if(!f.files[0]) return; msg('Cargando…'); try{ await nvShow(f.files[0]); msg(f.files[0].name+' cargado.'); }catch(e){ console.warn(e); msg('No se pudo abrir: '+e.message); } };
+  d.onchange=async()=>{ if(!d.files.length) return; msg(`Convirtiendo ${d.files.length} archivos DICOM…`);
+    try{ const D=await import(DCM_CDN+'index.jpeg.js');
+      const createWorker=()=>new Worker(DCM_CDN+'worker.jpeg.js',{type:'module'});
+      const r=await D.convert([...d.files],{args:['-z','n','-f','serie_%s'],createWorker,timeoutMs:180000,onProgress:p=>msg(`Convirtiendo… ${Math.round(p*100)} %`)});
+      if(!r.series.length){ msg('No se encontró ninguna serie convertible ('+(r.log||[]).slice(-1)[0]+').'); return; }
+      const s=r.series.slice().sort((a,b)=>b.image.size-a.image.size)[0];
+      await nvShow(s.image,(s.json&&s.json.SeriesDescription)||s.stem); msg(`${r.series.length} serie(s); mostrando ${(s.json&&s.json.SeriesDescription)||s.stem}.`);
+    }catch(e){ console.warn(e); msg('Conversión DICOM no disponible aquí ('+e.message+'). Alternativa: exporta a NIfTI con 3D Slicer o dcm2niix y ábrelo arriba.'); } };
+  document.querySelectorAll('[data-nvs]').forEach(b=>b.onclick=()=>{ if(nv&&NVL){ nvStageShow(true); nv.setSliceType(+b.dataset.nvs); } });
+  document.querySelectorAll('[data-nvtog]').forEach(b=>b.onclick=()=>{ if(nv&&nv.volumes.length) nvStageShow(!nvVis); });
+  document.querySelectorAll('[data-nvw]').forEach(b=>b.onclick=()=>{ const [c,w]=b.dataset.nvw.split(',').map(Number); nvWin(c,w); });
+  document.querySelectorAll('[data-nvm]').forEach(b=>{ b.classList.toggle('on',nvMeasure); b.onclick=()=>{ if(!nv||!NVL) return; nvMeasure=!nvMeasure; nv.opts.dragMode=nvMeasure?NVL.DRAG_MODE.measurement:NVL.DRAG_MODE.contrast; b.classList.toggle('on',nvMeasure); }; });
+}
+
+/* ======================= HERRAMIENTAS ======================= */
+let tool=null; const toolState={pts:[],mmode:'line',defects:[],W:8,L:10,ov:5,trocars:[],ct:{axis:'y',pos:0,show:true}};
+const toolGroup={}; function tg(){ if(!toolGroup[cur.id]){ toolGroup[cur.id]=new THREE.Group(); cur.scene.add(toolGroup[cur.id]); } return toolGroup[cur.id]; }
+function clearTool(){ const g=tg(); while(g.children.length) g.remove(g.children[0]); cur.labels=cur.labels.filter(L=>{ if(L.tool){ L.el.remove(); return false;} return true; }); }
+function toolLabel(p,t,cls='node'){ const el=document.createElement('div'); el.className='lbl '+cls; el.textContent=t; cur.layer.appendChild(el); cur.labels.push({p:p.clone(),el,gid:null,item:null,keep:true,occ:false,tool:true}); }
+const WALLG=['ehs','eo','skin','rectus'];
+function wallObjs(){ return cur.groups.filter(g=>WALLG.includes(g.id)&&g.on).flatMap(g=>g.obj.children.filter(o=>o.isMesh)); }
+function solidObjs(){ return visiblePick().filter(o=>o.isMesh&&!(o.material.transparent&&o.material.opacity<.3)); }
+function hitAt(e){ const r=renderer.domElement.getBoundingClientRect(); ptr.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ptr,camera); ray.firstHitOnly=true;
+  const objs=(tool==='measure'||cur.id!=='pared')?solidObjs():wallObjs(); const hs=ray.intersectObjects(objs,false); return hs[0]||null; }
+function surfNormal(h){ const n=h.face.normal.clone().transformDirection(h.object.matrixWorld); if(n.dot(ray.ray.direction)>0) n.negate(); return n; }
+function ehsAt(p){ let best=1e9,z=0; for(const id of ['eo_R','eo_L']){ const pa=GEO[id].attributes.position,t=TAG[id]; for(let i=0;i<pa.count;i+=2){ const dx=pa.getX(i)-p.x,dy=pa.getY(i)-p.y,dz=pa.getZ(i)-p.z,d=dx*dx+dy*dy+dz*dz; if(d<best){best=d; z=t[i]>>4;} } } return z?EHS[z][0]:null; }
+function distTo(ids,p){ let best=1e9; for(const id of ids){ const pa=GEO[id].attributes.position; for(let i=0;i<pa.count;i++){ const d=Math.hypot(pa.getX(i)-p.x,pa.getY(i)-p.y,pa.getZ(i)-p.z); if(d<best) best=d; } } return best; }
+function frameAt(c,n){ const u=V(1,0,0).addScaledVector(n,-n.x).normalize(), w=new THREE.Vector3().crossVectors(n,u).normalize(); return {c,n,u,w}; }
+function projectLoop(F,pts2){ const rc=new THREE.Raycaster(); rc.firstHitOnly=true; const objs=wallObjs(); const out=[];
+  for(const [a,b] of pts2){ const q=F.c.clone().addScaledVector(F.u,a).addScaledVector(F.w,b).addScaledVector(F.n,8); rc.set(q,F.n.clone().negate()); const h=rc.intersectObjects(objs,false)[0]; out.push(h?h.point.clone().addScaledVector(F.n,.12):F.c.clone().addScaledVector(F.u,a).addScaledVector(F.w,b)); } return out; }
+function drawDefect(){ clearTool(); const D=toolState.defects; if(!D.length){ renderInfo(); return; } const g=tg(); const F=D[0].F, o=toolState.ov;
+  let mnA=1e9,mxA=-1e9,mnB=1e9,mxB=-1e9, area=0;
+  for(const d of D){ const ell=[]; for(let i=0;i<=48;i++){ const a=i/48*Math.PI*2; ell.push([d.a+Math.cos(a)*d.W/2,d.b+Math.sin(a)*d.L/2]); }
+    g.add(polyline(projectLoop(F,ell),0xff3355,{dt:false})); mnA=Math.min(mnA,d.a-d.W/2); mxA=Math.max(mxA,d.a+d.W/2); mnB=Math.min(mnB,d.b-d.L/2); mxB=Math.max(mxB,d.b+d.L/2); area+=Math.PI*d.W*d.L/4;
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),new THREE.MeshBasicMaterial({color:0xff3355})); m.position.copy(F.c).addScaledVector(F.u,d.a).addScaledVector(F.w,d.b); g.add(m); }
+  const r=[[mnA-o,mnB-o],[mxA+o,mnB-o],[mxA+o,mxB+o],[mnA-o,mxB+o],[mnA-o,mnB-o]]; const rr=[]; for(let i=0;i<4;i++) for(let k=0;k<12;k++){ const t=k/12; rr.push([r[i][0]*(1-t)+r[i+1][0]*t,r[i][1]*(1-t)+r[i+1][1]*t]); } rr.push(r[0]);
+  g.add(polyline(projectLoop(F,rr),0xffffff,{dt:false}));
+  toolState.sum={MW:mxA-mnA+2*o, ML:mxB-mnB+2*o, Wtot:mxA-mnA, Ltot:mxB-mnB, area};
+  toolLabel(F.c.clone().addScaledVector(F.n,.5).addScaledVector(F.w,mxB+.8),D.length>1?`${D.length} defectos`:`Defecto ${D[0].W}×${D[0].L} cm`,'vsl'); renderInfo(); }
+/* ---- CT slicing ---- */
+const HU=id=>{ if(/ribs|cart|sternum|xiphoid|spine|sacrum|hip/.test(id)) return [7,'#f2f2f2']; if(/skin/.test(id)) return [0,'#5a5a5a']; if(/periton|tfascia|omen|meso|bursa|broad/.test(id)) return [1,'#4a4a4a'];
+  if(/liver|spleen|kidney|pancreas|adrenal|uterus|ovar|prostate|sv$|heart/.test(id)) return [3,'#9a9a9a']; if(/stomach|esophagus|duoden|colon|rectum|sigmoid|appendix|bladder|vagina/.test(id)) return [3,'#8c8c8c'];
+  if(/aorta|eia$|cia|iia|iea|sea|lga|rga|gda|pha|cha|celiac|spla|sma|ima|sigA|srA|lcA|mcA|rcA|icA|margA|testa|renala|iphra|esoart|thaorta|arch|uta|bronchart|pulma/.test(id)) return [6,'#d8d8d8'];
+  if(/v$|vein|ivc|iev|sev|portal|lgv|rgv|gev|imv|smv|splv|civ|eiv|iiv|azygos|hemiaz|svc|obtv|testv|renalv|utv|pulmv|V$/.test(id)) return [5,'#bdbdbd'];
+  return [2,'#7a7a7a']; };
+function ctObjs(){ const out=[]; for(const g of cur.groups){ if(!g.on) continue; g.obj.traverse(o=>{ if(o.isMesh&&o.geometry&&o.geometry.index&&o.geometry.attributes.position) out.push(o); }); } return out; }
+function sliceSegs(o,axis,c){ const g=o.geometry, P=g.attributes.position.array, I=g.index.array, ax={x:0,y:1,z:2}[axis]; const segs=[]; const oz=o.parent?o.parent.position.z:0;
+  const val=(k)=>P[k*3+ax]+(ax===2?oz:0);
+  for(let t=0;t<I.length;t+=3){ const a=I[t],b=I[t+1],d=I[t+2]; const da=val(a)-c, db=val(b)-c, dd=val(d)-c; if((da>0&&db>0&&dd>0)||(da<0&&db<0&&dd<0)) continue;
+    const pts=[]; const e=(i,j,di,dj)=>{ if((di>0)!==(dj>0)){ const t2=di/(di-dj); pts.push([P[i*3]+(P[j*3]-P[i*3])*t2, P[i*3+1]+(P[j*3+1]-P[i*3+1])*t2, P[i*3+2]+(P[j*3+2]-P[i*3+2])*t2+oz]); } };
+    e(a,b,da,db); e(b,d,db,dd); e(d,a,dd,da); if(pts.length===2) segs.push(pts); } return segs; }
+function to2(p,axis){ return axis==='y'?[p[0],-p[2]]:axis==='z'?[p[0],-p[1]]:[-p[2],-p[1]]; }
+function chain(segs,axis){ const key=p=>Math.round(p[0]*200)+','+Math.round(p[1]*200); const adj=new Map(); const S=segs.map(s=>[to2(s[0],axis),to2(s[1],axis)]);
+  S.forEach((s,i)=>{ for(const k of [key(s[0]),key(s[1])]){ if(!adj.has(k)) adj.set(k,[]); adj.get(k).push(i); } }); const used=new Uint8Array(S.length); const loops=[];
+  for(let i=0;i<S.length;i++){ if(used[i]) continue; used[i]=1; const L=[S[i][0],S[i][1]]; let cur2=S[i][1];
+    for(let guard=0;guard<20000;guard++){ const nb=(adj.get(key(cur2))||[]).find(j=>!used[j]); if(nb===undefined) break; used[nb]=1; const s=S[nb]; const nxt=key(s[0])===key(cur2)?s[1]:s[0]; L.push(nxt); cur2=nxt; }
+    if(L.length>2) loops.push(L); } return loops; }
+let ctPending=false;
+function updateCT(){ if(tool!=='ct') return; const T=toolState.ct; const n={x:V(-1,0,0),y:V(0,-1,0),z:V(0,0,-1)}[T.axis]; renderer.clippingPlanes=[new THREE.Plane(n,T.pos)];
+  if(ctPending) return; ctPending=true; requestAnimationFrame(()=>{ ctPending=false; drawCT(); }); }
+function drawCT(){ const cv=document.getElementById('ctCanvas'); if(!cv) return; const T=toolState.ct, ctx=cv.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
+  const objs=ctObjs().map(o=>{ const id=o.userData.mesh||(o.material&&o.material.color&&o.material.color.getHex()===0xc4211b?'aorta':(o.material&&o.material.color&&o.material.color.getHex()===0x2e4fae?'vein':'x')); return {o,h:HU(id)}; }).sort((a,b)=>a.h[0]-b.h[0]);
+  const all=[]; for(const it of objs){ const segs=sliceSegs(it.o,T.axis,T.pos); if(segs.length) all.push({loops:chain(segs,T.axis),col:it.h[1]}); }
+  let mn=[1e9,1e9],mx=[-1e9,-1e9]; for(const a of all) for(const L of a.loops) for(const p of L){ mn[0]=Math.min(mn[0],p[0]); mn[1]=Math.min(mn[1],p[1]); mx[0]=Math.max(mx[0],p[0]); mx[1]=Math.max(mx[1],p[1]); }
+  if(!all.length){ ctx.fillStyle='#888'; ctx.fillText('Sin estructuras en este plano',10,20); return; }
+  const sc=Math.min((cv.width-20)/(mx[0]-mn[0]),(cv.height-20)/(mx[1]-mn[1])); const ox=(cv.width-(mx[0]-mn[0])*sc)/2, oy=(cv.height-(mx[1]-mn[1])*sc)/2;
+  for(const a of all){ ctx.beginPath(); for(const L of a.loops){ L.forEach((p,i)=>{ const X=ox+(p[0]-mn[0])*sc, Y=oy+(p[1]-mn[1])*sc; i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.closePath(); } ctx.fillStyle=a.col; ctx.fill('evenodd'); }
+  ctx.fillStyle='#9fb3c8'; ctx.font='11px sans-serif'; const lab=T.axis==='y'?['D','I','ANT']:T.axis==='z'?['D','I','CRAN']:['ANT','POST','CRAN']; ctx.fillText(lab[0],4,cv.height/2); ctx.fillText(lab[1],cv.width-12,cv.height/2); ctx.fillText(lab[2],cv.width/2-10,12);
+  ctx.fillText('10 cm',8,cv.height-8); ctx.fillRect(8,cv.height-20,10*sc,2); }
+/* ---- clicks ---- */
+function toolClick(e){ const h=hitAt(e); if(!h) return; const p=h.point.clone(), n=surfNormal(h);
+  if(tool==='measure'){ const mm=toolState.mmode;
+    if(mm!=='area'&&toolState.pts.length>=2){ clearTool(); toolState.pts=[]; } toolState.pts.push(p);
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),new THREE.MeshBasicMaterial({color:0x00e5ff,depthTest:false})); m.position.copy(p); m.renderOrder=7; tg().add(m);
+    if(mm==='line'&&toolState.pts.length===2){ const [a,b]=toolState.pts; tg().add(polyline([a,b],0x00e5ff,{dt:false})); toolState.res=a.distanceTo(b); toolLabel(a.clone().add(b).multiplyScalar(.5).add(V(0,.6,0)),toolState.res.toFixed(1)+' cm','ruler'); }
+    if(mm==='surf'&&toolState.pts.length===2){ const [a,b]=toolState.pts; const rc=new THREE.Raycaster(); rc.firstHitOnly=true; const objs=solidObjs(); const path=[a]; for(let i=1;i<40;i++){ const q=a.clone().lerp(b,i/40); const dir=q.clone().sub(camera.position).normalize(); rc.set(camera.position,dir); const hh=rc.intersectObjects(objs,false)[0]; path.push(hh?hh.point:q); } path.push(b);
+      let L=0; for(let i=1;i<path.length;i++) L+=path[i].distanceTo(path[i-1]); toolState.res=L; tg().add(polyline(path.map(q=>q.clone().addScaledVector(camera.position.clone().sub(q).normalize(),.08)),0x00e5ff,{dt:false})); toolLabel(path[20].clone().add(V(0,.6,0)),L.toFixed(1)+' cm (superficie)','ruler'); }
+    if(mm==='area'&&toolState.pts.length>1){ const P=toolState.pts; tg().add(polyline([P[P.length-2],P[P.length-1]],0x00e5ff,{dt:false})); }
+    renderInfo(); }
+  else if(tool==='defect'){ const D=toolState.defects; if(!D.length||!toolState.add){ toolState.defects=[{F:frameAt(p,n),a:0,b:0,W:toolState.W,L:toolState.L,zone:ehsAt(p)}]; } else { const F=D[0].F, d=p.clone().sub(F.c); D.push({F,a:d.dot(F.u),b:d.dot(F.w),W:toolState.W,L:toolState.L,zone:ehsAt(p)}); } toolState.add=false; drawDefect(); }
+  else if(tool==='trocar'){ const k=toolState.trocars.length+1; const c=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,3.2,20),new THREE.MeshPhysicalMaterial({color:0x9aa7b4,metalness:.8,roughness:.25,envMap:ENV})); c.position.copy(p).addScaledVector(n,1.2); c.quaternion.setFromUnitVectors(V(0,1,0),n); tg().add(c);
+    const dIEA=distTo(['iea_R','iea_L','iev_R','iev_L','sea','sev'],p); toolState.trocars.push({p,n,zone:ehsAt(p),dIEA}); toolLabel(p.clone().addScaledVector(n,3.4),'T'+k,dIEA<2.5?'vsl':'node'); renderInfo(); } }
+function closeArea(){ const P=toolState.pts; if(P.length<3) return; tg().add(polyline([P[P.length-1],P[0]],0x00e5ff,{dt:false})); const c=P.reduce((a,b)=>a.clone().add(b),V(0,0,0)).multiplyScalar(1/P.length); let A=0,per=0;
+  for(let i=0;i<P.length;i++){ const a=P[i],b=P[(i+1)%P.length]; A+=new THREE.Vector3().crossVectors(a.clone().sub(c),b.clone().sub(c)).length()/2; per+=a.distanceTo(b); } toolState.res=A; toolState.per=per; toolLabel(c.clone().add(V(0,.5,0)),A.toFixed(1)+' cm²','ruler'); toolState.closed=true; renderInfo(); }
+function toolPanel(){
+  if(tool==='measure'){ const mm=toolState.mmode; const B=(k,t)=>`<button class="btn ${mm===k?'on':''}" data-mm="${k}">${t}</button>`;
+    return `<div class="tool"><b>Medir</b><div>${B('line','Línea recta')}${B('surf','Sobre superficie')}${B('area','Área')}</div>
+    <p class="steps">${mm==='area'?'Toca los vértices del contorno y pulsa «Cerrar».':'Toca dos puntos. Un tercer toque empieza otra medición.'}${mm==='surf'?' La distancia sigue la superficie visible entre los dos puntos.':''}</p>
+    ${toolState.res!==undefined&&(mm!=='area'||toolState.closed)?`<p><b>${mm==='area'?toolState.res.toFixed(1)+' cm² · perímetro '+toolState.per.toFixed(1)+' cm':toolState.res.toFixed(1)+' cm'}</b></p>`:''}
+    ${mm==='area'?'<button class="btn" data-close>Cerrar contorno</button><button class="btn" data-clear>Borrar</button>':''}<button class="btn" data-tool-off>Terminar</button></div>`; }
+  if(tool==='defect'){ const D=toolState.defects, S=toolState.sum, o=toolState.ov, W=toolState.W, L=toolState.L; const wc=S?(S.Wtot<4?'W1':(S.Wtot<=10?'W2':'W3')):'';
+    const mdar=S?(S.MW*S.ML)/S.area:0;
+    return `<div class="tool"><b>Simulador de defecto y malla</b><p class="steps">Toca la pared para colocar el defecto. «Añadir defecto» y otro toque para defectos múltiples («queso suizo»).</p>
+    <label>Anchura W <input type="range" min="1" max="20" step=".5" value="${W}" data-p="W"> <b>${W} cm</b></label>
+    <label>Longitud L <input type="range" min="1" max="30" step=".5" value="${L}" data-p="L"> <b>${L} cm</b></label>
+    <label>Solapamiento <input type="range" min="3" max="8" step=".5" value="${o}" data-p="ov"> <b>${o} cm</b></label>
+    ${S?`<table><tr><th>EHS</th><td>${[...new Set(D.map(d=>d.zone||'—'))].join(', ')} · ${wc} (W = anchura total entre bordes laterales de los defectos)</td></tr>
+    <tr><th>Defectos</th><td>${D.length} · área total ≈ ${S.area.toFixed(0)} cm²</td></tr><tr><th>Malla mínima</th><td><b>${S.MW.toFixed(0)} × ${S.ML.toFixed(0)} cm</b> (${(S.MW*S.ML).toFixed(0)} cm²)</td></tr>
+    <tr><th>MDAR</th><td><b>${mdar.toFixed(1)}</b> (área malla / área defecto). Para IPOM se ha propuesto un MDAR ≥ 16 (Tulloh y de Beaux); en planos retromusculares se usan solapamientos amplios.</td></tr></table>`:''}
+    <button class="btn" data-adddef>Añadir defecto</button><button class="btn" data-clear>Borrar</button><button class="btn" data-tool-off>Terminar</button></div>`; }
+  if(tool==='trocar'){ const T=toolState.trocars;
+    return `<div class="tool"><b>Planificador de trócares</b><p class="steps">Toca la pared para colocar trócares. Aviso si quedan a menos de 2,5 cm de los vasos epigástricos reales (umbral orientativo; la epigástrica superficial no está modelada).</p>
+    ${T.map((t,i)=>`<div>T${i+1}: ${t.zone||'—'} · a ${t.dIEA.toFixed(1)} cm de los epigástricos ${t.dIEA<2.5?'<span class="bad">⚠ riesgo</span>':'<span class="ok">✓</span>'}${(t.zone&&t.zone[0]==='M'&&t.zone!=='M3')?' · <span class="bad">atraviesa el recto</span>':''}</div>`).join('')}
+    ${T.length>1?'<p class="steps">Distancias: '+T.flatMap((a,i)=>T.slice(i+1).map((b,j)=>`T${i+1}–T${i+j+2} ${a.p.distanceTo(b.p).toFixed(1)} cm`)).join(' · ')+'</p>':''}
+    <button class="btn" data-clear>Borrar</button><button class="btn" data-tool-off>Terminar</button></div>`; }
+  if(tool==='ct'){ const T=toolState.ct; const B=(k,t)=>`<button class="btn ${T.axis===k?'on':''}" data-ax="${k}">${t}</button>`; const rng=ctRange();
+    return `<div class="tool"><b>Corte tipo TC</b><div>${B('y','Axial')}${B('z','Coronal')}${B('x','Sagital')}</div>
+    <label>Posición <input type="range" min="${rng[0]}" max="${rng[1]}" step=".2" value="${T.pos}" data-ctpos> <b>${T.pos.toFixed(1)}</b></label>
+    <canvas id="ctCanvas" width="340" height="300" style="width:100%;background:#000;border-radius:6px"></canvas>
+    <p class="steps">TC sintético en escala de grises a partir de las estructuras visibles de esta vista (hueso blanco, vasos con contraste claros, vísceras grises, grasa oscura). Convención radiológica: el lado izquierdo del paciente a la derecha de la imagen.</p><button class="btn" data-tool-off>Terminar</button></div>`; }
+  return '';
+}
+function ctRange(){ const b=new THREE.Box3(); for(const o of ctObjs()) b.expandByObject(o); const a={x:0,y:1,z:2}[toolState.ct.axis]; const mn=b.min.getComponent(a), mx=b.max.getComponent(a); return [Math.floor(mn), Math.ceil(mx)]; }
+function setTool(t){ tool=(tool===t?null:t); clearTool(); toolState.pts=[]; toolState.res=undefined; toolState.closed=false; toolState.defects=[]; toolState.sum=null; toolState.trocars=[]; renderer.clippingPlanes=[];
+  if(tool==='ct'){ const r=ctRange(); if(toolState.ct.pos<r[0]||toolState.ct.pos>r[1]) toolState.ct.pos=(r[0]+r[1])/2; }
+  document.getElementById('bMeasure').classList.toggle('on',tool==='measure'); document.getElementById('bCT').classList.toggle('on',tool==='ct'); renderInfo(); if(tool==='ct') updateCT(); }
+
+const BAR={C:0,M:0}, HSA={a:3.5,b:3.0,g:35};
+function paintBarrett(){ const v=views.ueg; const m=v.gmap.organ.obj.children.find(o=>o.userData.mesh==='esophagus'); if(!m) return; const egj=V(...EX.pts.egj), ax=V(...EX.pts.ax); const p=m.geometry.attributes.position, col=m.geometry.attributes.color.array;   const ref=V(0,0,1).addScaledVector(ax,-ax.z).normalize(), ref2=new THREE.Vector3().crossVectors(ax,ref); const w=V(0,0,0);
+  if(!(BAR.C||BAR.M)) return;
+  for(let i=0;i<p.count;i++){ w.fromBufferAttribute(p,i).sub(egj); const d=w.dot(ax); const ang=Math.atan2(w.dot(ref2),w.dot(ref)); let on=d>-.2&&(d<BAR.C||(d<BAR.M&&Math.abs(ang)<.55));
+    if(on){ col[i*3]=1; col[i*3+1]=.55; col[i*3+2]=.4; } } m.geometry.attributes.color.needsUpdate=true; }
+function uegPanels(){ const area=.5*HSA.a*HSA.b*Math.sin(HSA.g*Math.PI/180);
+  return `<h3>Barrett (Praga C&M)</h3><div class="tool"><label>C (circunferencial) <input type="range" min="0" max="10" step=".5" value="${BAR.C}" data-barrett="C"> <b>${BAR.C} cm</b></label><label>M (máxima) <input type="range" min="0" max="12" step=".5" value="${BAR.M}" data-barrett="M"> <b>${BAR.M} cm</b></label><p class="steps">Pinta la extensión sobre el esófago real (proyección externa). <a data-item="barrett">Ver ficha y Hill</a></p></div>
+  <h3>Superficie del hiato (HSA)</h3><div class="tool"><label>Pilar derecho <input type="range" min="1" max="8" step=".1" value="${HSA.a}" data-hsa="a"> <b>${HSA.a} cm</b></label><label>Pilar izquierdo <input type="range" min="1" max="8" step=".1" value="${HSA.b}" data-hsa="b"> <b>${HSA.b} cm</b></label><label>Ángulo <input type="range" min="10" max="90" step="1" value="${HSA.g}" data-hsa="g"> <b>${HSA.g}°</b></label>
+  <p>HSA ≈ ½·a·b·sen(α) = <b>${area.toFixed(1)} cm²</b></p><p class="steps">Fórmula triangular (Granderath). No hay un umbral universal; en algunas series se considera «hiato grande» a partir de ~5 cm² y se valora el refuerzo.</p></div>`; }
+/* ======================= TÉCNICAS ======================= */
+const CAM={front:{d:[.1,.05,1]},back:{d:[0,.12,-1]},left:{d:[1,.1,.2]},right:{d:[-1,.1,.2]}};
+const TECH={
+ pared:[
+  {id:'sugar',name:'Hernia paraestomal (Sugarbaker / keyhole)',steps:[
+   {t:'Anatomía del estoma',d:'El asa atraviesa el recto; el defecto paraestomal se clasifica con EHS (tamaño ≤/> 5 cm y hernia incisional concomitante).',g:['eo','rectus','stoma','bones','refs'],cam:{t:[4,-11,5],d:[.3,.05,1],w:24,h:24},hl:'stoma'},
+   {t:'Abordaje laparoscópico',d:'Adhesiolisis y reducción del contenido; medición del defecto y de las hernias incisionales asociadas.',g:['ta','rectus','stoma','perit'],cam:{t:[4,-11,2],d:[0,.1,-1],w:24,h:24},hl:'stoma'},
+   {t:'Sugarbaker vs keyhole',d:'Sugarbaker: malla con barrera que lateraliza el asa (menor recidiva en series). Keyhole: malla con orificio alrededor del asa (más recidiva). Alternativas abiertas retromusculares (Stoppa modificado/Pauli).',g:['ta','rectus','stoma','perit'],cam:{t:[4,-11,2],d:[0,.1,-1],w:24,h:24},hl:'stoma',ov:['mesh_rs']}]},
+  {id:'rs',name:'Rives-Stoppa (retromuscular)',steps:[
+   {t:'Laparotomía y saco',d:'Incisión media, resección de cicatriz/saco y adhesiolisis. Identificar el borde medial de ambas vainas de los rectos.',g:['eo','rectus','bones','refs'],cam:{t:[0,-3,6],d:[.1,.05,1],w:30,h:40},hl:'rectus'},
+   {t:'Apertura de la vaina posterior',d:'Incisión de la hoja posterior a 0,5–1 cm de su borde medial (líneas amarillas, vista posterior), de xifoides a arcuata.',g:['rectus','ta'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},hl:'rsp',ov:['rs_open_R','rs_open_L']},
+   {t:'Disección retromuscular',d:'Entre recto y vaina posterior hasta la línea semilunar. Los vasos epigástricos quedan en la cara posterior del recto; los paquetes neurovasculares que entran por el borde lateral marcan el límite lateral.',g:['rectus','vessels','nerves','ta'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},hl:'eia',ov:['rs_open_R','rs_open_L']},
+   {t:'Cierre de la vaina posterior y malla',d:'Cierre de la vaina posterior en línea media; malla retromuscular con solapamiento ≥ 5 cm (prolongar retroxifoideo o a Retzius en defectos M1/M5).',g:['rectus','ta','vessels','bones'],cam:{t:[0,-3,4],d:[.1,.1,1],w:28,h:38},ov:['mesh_rs']},
+   {t:'Cierre de la línea alba',d:'Cierre anterior sin tensión con puntos pequeños (relación sutura/herida ≥ 4:1). Si no cierra sin tensión → separación de componentes.',g:['eo','rectus','bones','refs'],cam:{t:[0,-3,6],d:[.1,.05,1],w:30,h:40},ov:['mesh_rs']}]},
+  {id:'tar',name:'TAR (separación posterior de componentes)',steps:[
+   {t:'Indicación',d:'Defectos amplios (habitualmente W3), pérdida de domicilio o hernias laterales/subcostales donde el retromuscular no permite cerrar sin tensión.',g:['ehs','bones','refs'],cam:{t:[0,-3,6],d:[.1,.05,1],w:30,h:40}},
+   {t:'Rives-Stoppa hasta la semilunar',d:'Apertura de la vaina posterior y disección retromuscular bilateral hasta ver la entrada de los nervios en el recto.',g:['rectus','ta','nerves','vessels'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},ov:['rs_open_R','rs_open_L']},
+   {t:'Incisión de la lámina posterior',d:'Incisión 0,5–1 cm medial a la línea semilunar (líneas cian), por dentro de la entrada de los nervios. Empezar en el tercio superior, donde aparecen las fibras musculares del TA.',g:['rectus','ta','nerves'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},hl:'ta',ov:['tar_R','tar_L']},
+   {t:'Sección del TA y plano lateral',d:'Sección de las fibras mediales del TA y disección entre TA y fascia transversalis (o preperitoneal) hasta el psoas; arriba retroxifoideo/retrocostal, abajo Retzius y Bogros.',g:['ta','nerves','post','bones'],cam:{t:[-6,-4,0],d:[-.6,.15,-.8],w:28,h:34},hl:'ta',ov:['tar_R','tar_L']},
+   {t:'Malla y cierre',d:'Malla amplia retromuscular-preperitoneal cubriendo ambos espacios; cierre de la vaina posterior y después de la línea alba.',g:['rectus','ta'],cam:{t:[0,-3,4],d:[0,.12,-1],w:32,h:38},ov:['mesh_tar']}]},
+  {id:'sac',name:'Separación anterior de componentes (Ramírez)',steps:[
+   {t:'Colgajos',d:'Colgajos dermograsos hasta 2 cm lateral a la semilunar. Las variantes endoscópicas o con preservación de perforantes reducen complicaciones cutáneas.',g:['skin','eo','bones','refs'],cam:{t:[0,-3,6],d:[.1,.05,1],w:30,h:40},hl:'skin'},
+   {t:'Sección de la aponeurosis del OE',d:'1–2 cm lateral a la línea semilunar (líneas amarillas), desde por encima del reborde costal hasta cerca del ligamento inguinal.',g:['eo','bones','refs'],cam:{t:[0,-3,6],d:[.1,.05,1],w:30,h:40},hl:'eo',ov:['sac_R','sac_L']},
+   {t:'Plano OE–OI y avance',d:'Disección roma en el plano avascular entre OE y OI y avance medial del complejo recto–OI–TA; la ganancia es mayor a nivel umbilical.',g:['io','rectus','bones'],cam:{t:[-4,-3,4],d:[-.4,.05,1],w:30,h:40},hl:'io',ov:['sac_R','sac_L']}]},
+  {id:'etep',name:'eTEP (retromuscular endoscópico)',steps:[
+   {t:'Acceso y trócares',d:'Primer trócar directamente en el espacio retromuscular (flanco/hipocondrio o suprapúbico); creación del espacio con la óptica y trócares en la misma vaina.',g:['eo','rectus','bones','refs'],cam:{t:[-3,-3,6],d:[-.4,.05,1],w:30,h:40},ov:['etep']},
+   {t:'Crossover',d:'Apertura de la vaina posterior ipsilateral junto a la línea alba y paso al lado contralateral por detrás de la línea alba, preservando el plano preperitoneal.',g:['rectus','ta','vessels'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},ov:['rs_open_R','rs_open_L','etep']},
+   {t:'Cierre y malla',d:'Cierre del defecto y de la vaina posterior; malla retromuscular. Si hace falta, TAR endoscópico (eTEP-TAR).',g:['rectus','ta'],cam:{t:[0,-3,4],d:[0,.12,-1],w:28,h:38},ov:['mesh_rs','etep']}]}],
+ ingle:[
+  {id:'licht',name:'Lichtenstein (abordaje anterior)',steps:[
+   {t:'Incisión y aponeurosis del OE',d:'Incisión inguinal; apertura de la aponeurosis del OE desde el anillo superficial en la dirección de sus fibras, identificando y apartando el ilioinguinal (y el iliohipogástrico por encima).',g:['ant','bones'],cam:{t:[-5.5,-20,4],d:[-.35,.15,1],w:16,h:14,up:[0,1,0]},hl:'eoant'},
+   {t:'Cordón y saco',d:'Aislar el cordón a nivel del tubérculo púbico; abrir el cremáster, buscar saco indirecto (anteromedial) y lipoma; valorar la pared posterior (directa).',g:['ant','bones'],cam:{t:[-5.5,-20,4],d:[-.35,.15,1],w:14,h:12,up:[0,1,0]},hl:'cordon'},
+   {t:'Fijación inferior',d:'Malla sobre la pared posterior, sobrepasando el tubérculo púbico 1,5–2 cm; sutura continua de monofilamento al shelving edge del ligamento inguinal hasta lateral al anillo profundo.',g:['ant','bones'],cam:{t:[-5.5,-20,4],d:[-.35,.15,1],w:16,h:14,up:[0,1,0]},hl:'shelving',ov:['mesh_licht']},
+   {t:'Fijación superior y colas',d:'Borde superior suturado al arco OI/TA y vaina del recto sin atrapar el iliohipogástrico; colas cruzadas lateral al cordón recreando el anillo profundo.',g:['ant','bones'],cam:{t:[-5.5,-20,4],d:[-.35,.15,1],w:16,h:14,up:[0,1,0]},hl:'conjoint',ov:['mesh_licht']},
+   {t:'Cierre',d:'Cierre de la aponeurosis del OE por delante del cordón sin estrechar el anillo superficial.',g:['ant','bones'],cam:{t:[-5.5,-20,4],d:[-.35,.15,1],w:16,h:14,up:[0,1,0]},hl:'sring'}]},
+  {id:'tapp',name:'TAPP (hernia inguinal derecha)',steps:[
+   {lap:{p:'umb_in',t:'ring'},t:'Visión inicial',d:'A través del peritoneo: ligamento umbilical medial, vasos epigástricos, anillo profundo, deferente y vasos espermáticos. Clasificar el defecto (L/M/F).',g:['wall','bones','ivessels','cord','retro','perit'],per:.85},
+   {t:'Colgajo peritoneal',d:'Incisión 3–4 cm por encima del anillo profundo, desde el ligamento umbilical medial hasta la EIAS (línea amarilla).',g:['wall','bones','ivessels','cord','retro','perit'],per:.55,ov:['tapp_flap']},
+   {t:'Espacio de Retzius',d:'Disección medial hasta la sínfisis y el ligamento de Cooper (atención a la corona mortis). Reducir el saco directo/pseudosaco.',g:['wall','bones','ilig','ivessels','cord','retro','zones'],hl:'cooper'},
+   {t:'Espacio de Bogros y saco indirecto',d:'Disección lateral hasta la EIAS sobre el psoas sin lesionar los nervios del triángulo del dolor. Reducción del saco indirecto y del lipoma de cordón.',g:['wall','bones','ilig','ivessels','cord','inerves','retro','zones'],hl:'lat'},
+   {t:'Parietalización',d:'Separar deferente y vasos espermáticos del peritoneo unos 5–6 cm en sentido craneal para que la malla quede plana.',g:['wall','bones','ilig','ivessels','cord','retro','zones'],hl:'vas'},
+   {t:'Malla y cierre',d:'Malla ≥ 10 × 15 cm cubriendo todo el orificio miopectíneo. Fijación (si se usa) solo en Cooper, recto y por encima del tracto iliopúbico. Cierre del peritoneo.',g:['wall','bones','ilig','ivessels','cord','inerves','retro','zones'],ov:['mesh_tapp']}]},
+  {id:'tep',name:'TEP (totalmente extraperitoneal)',steps:[
+   {t:'Acceso preperitoneal',d:'Incisión infraumbilical, apertura de la vaina anterior del recto, separación del recto y acceso al espacio preperitoneal por detrás de él (balón u óptica).',g:['wall','bones','ivessels','cord','retro']},
+   {t:'Retzius y Bogros',d:'Misma anatomía que en TAPP pero sin abrir el peritoneo: sínfisis y Cooper medial, EIAS lateral; reducción de sacos y parietalización.',g:['wall','bones','ilig','ivessels','cord','inerves','retro','zones'],hl:'hess'},
+   {t:'Malla',d:'Malla amplia sobre el MPO; desuflado controlado vigilando que el borde inferior no se enrolle.',g:['wall','bones','ilig','ivessels','cord','retro','zones'],ov:['mesh_tapp']}]}],
+ ueg:[
+  {id:'sleeve',name:'Gastrectomía vertical (sleeve)',steps:[
+   {t:'Exposición y desvascularización',d:'Sección del ligamento gastrocólico pegado a la curvatura mayor desde 4–6 cm del píloro hasta el ángulo de His, incluidos los vasos cortos; exponer el pilar izquierdo (descartar hernia de hiato).',g:['organ','art','visc','big','omento'],hl:'sga',lap:{p:'supra_in',t:'fundus'}},
+   {t:'Línea de grapado',d:'Inicio a 4–6 cm del píloro y grapado paralelo a la curvatura menor calibrado con bujía (habitualmente 32–40 Fr), sin estenosar la incisura angular, terminando 1 cm lateral al ángulo de His (línea amarilla).',g:['organ','visc','big'],hl:'antro',ov:['sleeve']},
+   {t:'Comprobación',d:'Revisión de hemostasia y estanqueidad; evitar torsión del tubo (espiral) y estenosis en la incisura.',g:['organ','visc','big'],ov:['sleeve']}]},
+  {id:'bypass',name:'Bypass gástrico en Y de Roux',steps:[
+   {t:'Reservorio gástrico',d:'Reservorio pequeño (≈ 30 ml, 5–6 cm) basado en la curvatura menor, con sección horizontal y vertical hasta el ángulo de His (línea amarilla), excluyendo el fundus.',g:['organ','art','visc','big','omento'],hl:'cardia',ov:['pouch'],lap:{p:'supra_in',t:'hiat'}},
+   {t:'Asa biliopancreática',d:'Desde el ángulo de Treitz se miden habitualmente 50–150 cm de asa biliopancreática (variable según técnica/escuela).',g:['organ','visc','big'],hl:'treitz'},
+   {t:'Gastroyeyunostomía y pie de asa',d:'Asa alimentaria de 100–150 cm (variable); cierre de los defectos mesentéricos (Petersen y del pie de asa) para prevenir hernias internas.',g:['organ','visc','big','omento'],ov:['pouch']}]},
+  {id:'ivor',name:'Esofagectomía de Ivor Lewis',steps:[
+   {t:'Fase abdominal: tubo gástrico',d:'Movilización gástrica preservando la arcada gastroepiploica derecha; ligadura de la gástrica izquierda (D2 abdominal: 7, 8a, 9, 11p); Kocher y valoración de piloroplastia.',g:['organ','art','visc','big','nodes'],hl:'gea'},
+   {t:'Hiato y mediastino inferior',d:'Apertura del hiato y disección del esófago distal con los ganglios 110, 111 y 112.',g:['organ','diaph','medias','big','nodes'],cam:{t:[1,14,-3],d:[-.5,.1,-.8],w:20,h:24},hl:'crus'},
+   {t:'Fase torácica',d:'Toracotomía/toracoscopia derecha: sección del cayado de la ácigos, movilización del esófago con ganglios paraesofágicos y subcarínicos (107), cuidado con la pars membranosa traqueobronquial y el conducto torácico.',g:['organ','medias','big'],cam:{t:[0,22,-3],d:[-1,.1,-.4],w:20,h:26},hl:'azygos'},
+   {t:'Conducto torácico y recurrentes',d:'Ligadura del conducto torácico (opcional/profiláctica) entre aorta y ácigos; en McKeown/linfadenectomía de 3 campos, disección de los recurrentes.',g:['organ','medias','big'],cam:{t:[0,22,-3],d:[-1,.1,-.4],w:20,h:26},hl:'tduct'},
+   {t:'Anastomosis',d:'Ascenso del tubo gástrico y anastomosis esofagogástrica intratorácica por encima de la ácigos.',g:['organ','medias','big'],cam:{t:[0,22,-3],d:[-1,.1,-.4],w:20,h:26},hl:'vthor'}]},
+  {id:'nissen',name:'Funduplicatura de Nissen laparoscópica',steps:[
+   {lap:{p:'supra_in',t:'hiat'},t:'Exposición',d:'Retracción del lóbulo hepático izquierdo; identificación de la unión esofagogástrica y del hiato.',g:['organ','diaph','liver','big'],liver:.6,hl:'liver'},
+   {t:'Pars flaccida y pilar derecho',d:'Apertura de la pars flaccida respetando la rama hepática del vago y una posible arteria hepática izquierda accesoria; disección del pilar derecho.',g:['organ','diaph','omento','big','vag'],hl:'omen_min'},
+   {t:'Pilar izquierdo, His y vasos cortos',d:'Disección del ángulo de His y del pilar izquierdo; sección de vasos cortos superiores si el fundus no llega sin tensión.',g:['organ','diaph','art','visc','big'],hl:'sga'},
+   {t:'Ventana retroesofágica y movilización',d:'Identificar vagos anterior y posterior; ventana retroesofágica; movilización mediastínica hasta ≥ 2–3 cm de esófago abdominal sin tensión.',g:['organ','diaph','vag','big'],hl:'vp'},
+   {t:'Hiatoplastia',d:'Cierre posterior de los pilares con puntos no reabsorbibles (líneas blancas), sin estenosar.',g:['organ','diaph','big'],hl:'hiato',ov:['crura']},
+   {t:'Funduplicatura',d:'Nissen: válvula de 360° corta (≈ 2–3 cm) y floja (calibrada), con el fundus posterior pasado por detrás del esófago. Alternativas: Toupet 270° posterior, Dor 180° anterior.',g:['organ','diaph','big','vag'],hl:'fundus',ov:['wrap']}]},
+  {id:'hpe',name:'Hernia paraesofágica (tipo III)',steps:[
+   {t:'Anatomía de la hernia',d:'Tipo III: unión esofagogástrica y fundus por encima del hiato. Cambia el selector «Hiato» para comparar I–IV.',g:['organ','diaph','big','visc'],hh:3},
+   {t:'Reducción y saco',d:'Reducción del estómago y escisión del saco herniario desde el mediastino, preservando vagos y pleura.',g:['organ','diaph','big','vag','visc'],hh:3,hl:'vp'},
+   {t:'Movilización e hiatoplastia',d:'Movilización mediastínica para longitud abdominal; cierre de pilares ± refuerzo (malla reabsorbible/biológica en hiatos grandes, controvertido).',g:['organ','diaph','big'],hh:0,hl:'hiato',ov:['crura']},
+   {t:'Funduplicatura ± gastropexia',d:'Funduplicatura como mecanismo antirreflujo y de anclaje; gastropexia en pacientes seleccionados.',g:['organ','diaph','big'],hh:0,ov:['wrap']}]},
+  {id:'d2',name:'Gastrectomía con linfadenectomía D2',steps:[
+   {lap:{p:'umb_in',t:'pyl'},t:'Epiplón y estadificación',d:'Exploración (descartar carcinomatosis), omentectomía o preservación según T; apertura de la transcavidad.',g:['organ','omento','art','visc','big'],hl:'omen_maj'},
+   {t:'Infrapilóricos (4d, 6)',d:'Ligadura de la vena y arteria gastroepiploicas derechas en su origen.',g:['organ','art','visc','big','nodes'],hl:'n6'},
+   {t:'Suprapilóricos (5, 12a) y duodeno',d:'Ligadura de la gástrica derecha en su origen, sección duodenal y linfadenectomía del ligamento hepatoduodenal a lo largo de la hepática propia.',g:['organ','art','visc','big','nodes'],hl:'n5'},
+   {t:'Hepática común, celíaco, esplénica (8a, 9, 11p)',d:'Linfadenectomía sobre el borde superior del páncreas (riesgo de fístula pancreática).',g:['organ','art','visc','big','nodes'],hl:'n9'},
+   {t:'Gástrica izquierda (7)',d:'Ligadura de la arteria y vena gástricas izquierdas en su origen.',g:['organ','art','visc','big','nodes'],hl:'lga'},
+   {t:'Cardias y reconstrucción',d:'En gastrectomía total: 1, 2, 4sa, 11d, sección esofágica y reconstrucción en Y de Roux. En distal: Billroth I/II o Y de Roux.',g:['organ','art','visc','big','nodes','diaph'],hl:'n1'}]}],
+ cr:[
+  {id:'tme',name:'Resección anterior de recto con ETM',steps:[
+   {lap:{p:'umb_in',t:'ima_o'},t:'Abordaje medial-a-lateral',d:'Incisión del peritoneo bajo la AMI a nivel del promontorio y entrada en el plano entre el mesocolon y la fascia de Toldt/prerrenal. Identificar uréter izquierdo y gonadales por detrás.',g:['colon','recto','vasos','uro','sacro','retro','cr_nerves'],cam:{t:[1,-6,0],d:[.25,.1,1],w:18,h:18},hl:'ureter'},
+   {t:'Ligadura de la AMI',d:'Ligadura alta (azul) a 1–2 cm del origen, preservando el plexo hipogástrico superior; o baja (verde) distal a la cólica izquierda.',g:['colon','recto','vasos','uro','pelvis','cr_nerves'],cam:{t:[1,-6,0],d:[.25,.1,1],w:16,h:16},hl:'hightie'},
+   {t:'VMI y ángulo esplénico',d:'Sección de la VMI en el borde inferior del páncreas y descenso del ángulo esplénico si hace falta longitud.',g:['colon','recto','vasos','uro','pelvis','retro'],cam:{t:[4,-1,0],d:[.3,.1,1],w:22,h:22},hl:'imv'},
+   {t:'Línea de Toldt',d:'Liberación lateral del colon descendente y sigma por la línea blanca de Toldt.',g:['colon','recto','vasos','uro','pelvis','cr_nerves'],hl:'toldt'},
+   {t:'ETM posterior',d:'Entrada en el «holy plane» por detrás del mesorrecto a nivel del promontorio; disección entre fascia mesorrectal y presacra, apartando los nervios hipogástricos.',g:['recto','meso','cr_nerves','sacro','uro','vasos'],cam:{t:[0,-17,-2],d:[-1,.2,.15],w:20,h:20},hl:'mesorectum'},
+   {t:'ETM lateral y anterior',d:'Lateralmente, cuidado con el plexo hipogástrico inferior; anteriormente, plano respecto a la fascia de Denonvilliers (vesículas/próstata o vagina).',g:['recto','meso','cr_nerves','sacro','uro'],cam:{t:[0,-17,-1],d:[-.8,.2,.6],w:20,h:20},hl:'ihp'},
+   {t:'Sección y anastomosis',d:'Sección distal con margen adecuado; anastomosis colorrectal/coloanal circular, test de fuga y valorar ileostomía de protección en anastomosis bajas.',g:['colon','recto','meso','sacro','uro','floor'],cam:{t:[0,-20,-1],d:[-.6,-.2,.8],w:18,h:18},hl:'rectum'}]}]
+};
+let techState=null;
+function buildTechOverlays(){
+  const yel=0xffd400, cy=0x00e5ff;
+  const tube=(p,c,r=.12)=>tubeMesh({p,r,c});
+  const add=(v,k,o)=>{ if(!o) return; v.techObj=v.techObj||new THREE.Group(); if(!v.techObj.parent) v.scene.add(v.techObj); o.visible=false; o.traverse(c=>{ c.renderOrder=6; if(c.material&&k.match(/rs_open|tar_|sac_|flap|crura|sleeve|pouch/)){ c.material.depthTest=false; c.material.transparent=true; } }); v.techObj.add(o); (v.techMap=v.techMap||{})[k]=o; };
+  const sheetMat=()=>new THREE.MeshPhysicalMaterial({color:0xf4f7fb,transparent:true,opacity:.55,side:THREE.DoubleSide,roughness:.4,depthWrite:false,wireframe:false});
+  const P=views.pared, I=views.ingle, U=views.ueg;
+  for(const s of ['R','L']){ add(P,'rs_open_'+s,tube(EX.inc['rs_open_'+s],yel)); add(P,'tar_'+s,tube(EX.inc['tar_'+s],cy)); add(P,'sac_'+s,tube(EX.inc['sac_'+s],yel)); }
+  add(P,'mesh_rs',new THREE.Mesh(GEO.mesh_rs,sheetMat())); add(P,'mesh_tar',new THREE.Mesh(GEO.mesh_tar,sheetMat()));
+  { const g=new THREE.Group(); const rc=new THREE.Raycaster(); for(const [x,y] of [[-10,6],[-11,-2],[-9.5,-10]]){ rc.set(V(x,y,40),V(0,0,-1)); const h=rc.intersectObjects(P.gmap.eo.obj.children.filter(o=>o.isMesh),false)[0]; if(!h) continue; const c=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,3.2,20),new THREE.MeshPhysicalMaterial({color:0x9aa7b4,metalness:.8,roughness:.25,envMap:ENV})); c.position.copy(h.point).add(V(-.3,0,1.2)); c.quaternion.setFromUnitVectors(V(0,1,0),V(-.3,0,1).normalize()); g.add(c);} add(P,'etep',g); }
+  add(I,'tapp_flap',tube(EX.inc.tapp_flap,yel,.1)); add(I,'mesh_licht',new THREE.Mesh(GEO.mesh_licht,sheetMat())); add(U,'sleeve',tube(EX.inc.sleeve,yel,.1)); add(U,'pouch',tube(EX.inc.pouch,yel,.1)); add(I,'mesh_tapp',new THREE.Mesh(GEO.mesh_tapp,sheetMat()));
+  { const egj=V(...EX.pts.egj), ax=V(...EX.pts.ax); const w=new THREE.Mesh(new THREE.TorusGeometry(1.75,.6,16,40),physMat({vertexColors:false,color:0xf0a898,emissive:0x331410},{amp:.015,freq:2})); w.position.copy(egj).addScaledVector(ax,1.6); w.quaternion.setFromUnitVectors(V(0,0,1),ax); add(U,'wrap',w);
+    const h=V(...EX.pts.hiat); const g=new THREE.Group(); for(let k=0;k<3;k++){ const y=-.5+k*.55; g.add(tube([[h.x-1.5,h.y+y,h.z-1.8],[h.x,h.y+y-.1,h.z-2.2],[h.x+1.5,h.y+y,h.z-1.8]],0xffffff,.07)); } add(U,'crura',g); }
+}
+function applyStep(){ const T=techState; if(!T) return; const st=T.tech.steps[T.k];
+  cur.setPreset(st.g); T.lapOn=false; if(st.cam) camTo(st.cam); else { if(cur.up) makeControls(cur.up); else makeControls(V(0,1,0)); cur.home(); }
+  for(const k in (cur.techMap||{})) cur.techMap[k].visible=(st.ov||[]).includes(k);
+  if(st.per!==undefined) setPer(st.per); if(st.liver!==undefined) setLiver(st.liver); if(st.hh!==undefined) setHH(st.hh);
+  sel=st.hl||null; renderGroups(); highlight(); renderInfo(); }
+function startTech(id){ const t=(TECH[cur.id]||[]).find(x=>x.id===id); if(!t) return; techState={tech:t,k:0}; quiz=null; applyStep(); }
+function endTech(){ techState=null; for(const k in (cur.techMap||{})) cur.techMap[k].visible=false; sel=null; renderInfo(); highlight(); }
+function techPanel(){ const T=techState, st=T.tech.steps[T.k];
+  return `<p class="steps">${T.tech.name} · paso ${T.k+1}/${T.tech.steps.length}</p><h2>${st.t}</h2><p>${st.d}</p>${st.hl&&cur.items[st.hl]?`<p><a data-item-info="${st.hl}">Ver ficha: ${cur.items[st.hl].name}</a></p>`:''}
+  ${st.lap?`<p><button class="btn ${T.lapOn?'on':''}" data-lap>Vista por la óptica (desde el puerto)</button></p>`:''}
+  <p><button class="btn" data-tprev ${T.k===0?'disabled':''}>← Anterior</button><button class="btn" data-tnext>${T.k===T.tech.steps.length-1?'Finalizar':'Siguiente →'}</button><button class="btn" data-tend>Salir</button></p>`; }
+function techListHTML(){ const L=TECH[cur.id]||[]; if(!L.length) return ''; return `<h3>Técnicas paso a paso</h3>${L.map(t=>`<button class="btn" data-tech="${t.id}">${t.name}</button>`).join('')}`; }
+
+/* ======================= EXAMEN ======================= */
+let quiz=null;
+function quizPool(){ return Object.values(cur.items).filter(it=>it.objs.length>0&&!/^pf/.test(it.id)); }
+function newQuestion(){ const pool=quizPool(); if(pool.length<4){ quiz=null; return; } const it=pool[Math.floor(Math.random()*pool.length)];
+  const type=Math.random()<.5?'tap':'mc'; quiz.q={type,id:it.id,res:null};
+  if(type==='mc'){ const opts=new Set([it.id]); while(opts.size<4) opts.add(pool[Math.floor(Math.random()*pool.length)].id); quiz.q.opts=[...opts].sort(()=>Math.random()-.5); }
+  ensureOn(it.objs[0].userData.gid); sel=type==='mc'?it.id:null; highlight(); }
+function startQuiz(){ techState=null; quiz={score:0,n:0}; newQuestion(); renderInfo(); }
+function quizAnswer(id){ const q=quiz.q; if(q.res) return; q.res=(id===q.id)?'ok':'bad'; quiz.n++; if(q.res==='ok') quiz.score++; sel=q.id; highlight(); renderInfo(); }
+function quizPanel(){ const q=quiz.q, it=cur.items[q.id]; const nm=x=>cur.items[x].name;
+  let h=`<p class="steps">Modo examen · ${quiz.score}/${quiz.n}</p>`;
+  if(q.type==='tap') h+=`<h2>Toca en el modelo: ${it.name}</h2><p class="steps">(o su etiqueta; desactiva «Etiquetas» para hacerlo más difícil)</p>`;
+  else h+=`<h2>¿Qué estructura está resaltada?</h2>${q.opts.map(o=>`<button class="btn qopt" data-qa="${o}">${nm(o)}</button>`).join('')}`;
+  if(q.res) h+=`<p class="${q.res}">${q.res==='ok'?'✓ Correcto':'✗ Era: '+it.name}</p><div>${it.html}</div><button class="btn" data-qnext>Siguiente pregunta</button>`;
+  return h+`<p><button class="btn" data-qend>Salir del examen</button></p>`; }
+
+/* ======================= APP ======================= */
+function fit(target,dir,w,h){
+  const W=stage.clientWidth||1,H=stage.clientHeight||1,asp=W/H,t=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const d=Math.max(h/(2*t),w/(2*t*asp))*1.05; controls.target.copy(target); camera.position.copy(target).addScaledVector(dir.clone().normalize(),d); controls.update();
+}
+const presetsEl=document.getElementById('presets'), groupsEl=document.getElementById('groups'), infoEl=document.getElementById('info');
+buildPared(); buildIngle(); buildUEG(); buildCR(); buildPac(); buildTechOverlays();
+function camTo(c){ if(c.lap){ makeControls(V(0,0,1)); cur.home(); return; } if(c.up) makeControls(V(...c.up)); else if(cur.up) makeControls(cur.up); if(c.p){ camera.position.set(...c.p); controls.target.set(...c.t); if(c.fov){ camera.fov=c.fov; camera.updateProjectionMatrix(); } controls.update(); return; } if(camera.fov!==36){ camera.fov=36; camera.updateProjectionMatrix(); } fit(V(...c.t),V(...c.d),c.w||26,c.h||30); }
+function setPer(x){ document.getElementById('perOp').value=x; for(const m of (window.PERMATS||[])){ m.opacity=x; m.depthWrite=x>.97; m.needsUpdate=true; } const g=cur.gmap.perit; if(g){ g.on=x>0.02; g.obj.visible=g.on; } }
+function setLiver(x){ document.getElementById('liverOp').value=x; for(const m of (views.ueg.liverMats||[])){ m.opacity=x; m.depthWrite=x>.95; m.needsUpdate=true; } }
+function setHH(k){ document.getElementById('hh').value=k; const sg=views.ueg.gmap.sie; sg.obj.children.forEach(o=>{ if(!o.userData.mesh) o.visible=(+k===0); }); views.ueg.labels.forEach(L=>{ if(L.gid==='sie') L.hideHH=(+k!==0); }); for(const m of (views.ueg.hh||[])){ const inf=m.morphTargetInfluences; if(!inf) continue; inf.fill(0); const names=m.geometry.morphAttributes.position.map(a=>a.name);
+    const want={1:'h1',2:'h2',3:'h3',4:'h3'}[k]; const i=names.indexOf(want); if(i>=0) inf[i]=1; if(+k===4){ const j=names.indexOf('h4'); if(j>=0) inf[j]=1; } } }
+let dia=false;
+document.getElementById('perOp').oninput=e=>setPer(+e.target.value);
+document.getElementById('skinOp').oninput=e=>{ for(const m of (views.pared.skinMats||[])){ m.opacity=+e.target.value; m.depthWrite=m.opacity>.95; m.needsUpdate=true; } };
+document.getElementById('hh').onchange=e=>setHH(+e.target.value);
+document.getElementById('bDia').onclick=e=>{ dia=!dia; e.currentTarget.classList.toggle('on',dia); for(const m of (views.pared.diaMeshes||[])) if(m.morphTargetInfluences) m.morphTargetInfluences[0]=dia?1:0; for(const g of ['eo','ehs']) views.pared.gmap[g].obj.children.forEach(o=>{ if(o.geometry&&o.geometry.type==='TubeGeometry'&&o.userData.item==='eo') o.scale.x=dia?7:1; }); if(dia){ views.pared.setPreset(['rectus','bones','refs','eo']); renderGroups(); } select(dia?'diast':null); };
+document.getElementById('bMeasure').onclick=()=>setTool('measure');
+let obese=false, female=false;
+document.getElementById('bObese').onclick=e=>{ obese=!obese; e.currentTarget.classList.toggle('on',obese); views.pared.gmap.skin.obj.children.concat(views.pared.gmap.huger.obj.children).forEach(m=>{ if(m.morphTargetInfluences) m.morphTargetInfluences[0]=obese?1:0; }); if(obese){ const g=views.pared.gmap.skin; g.on=true; g.obj.visible=true; renderGroups(); } select(obese?'obeso':null); };
+function applyFem(){ document.getElementById('bFem').classList.toggle('on',female); for(const v of [views.ingle,views.cr]){ const g=v.gmap.fem; g.on=female; g.obj.visible=female; (v.maleObjs||[]).forEach(o=>o.visible=!female); } renderGroups(); }
+document.getElementById('bFem').onclick=()=>{ female=!female; applyFem(); };
+document.getElementById('bCT').onclick=()=>setTool('ct');
+function highlight(){
+  for(const v of Object.values(views)) for(const it of Object.values(v.items)) for(const o of it.objs){ const m=o.material; if(m&&m.emissive){ if(o.userData.e0===undefined) o.userData.e0=m.emissive.getHex(); m.emissive.setHex(it.id===sel&&v===cur?0x553322:o.userData.e0); } }
+  cur.repaint.forEach(f=>f(sel));
+  for(const L of cur.labels) L.el.classList.toggle('sel',!!sel&&L.item===sel);
+}
+function renderGroups(){
+  groupsEl.innerHTML='';
+  for(const g of cur.groups){ const l=document.createElement('label'); l.className='grow';
+    l.innerHTML=`<input type="checkbox" ${g.on?'checked':''}><i style="background:${g.color}"></i>${g.name}`;
+    l.querySelector('input').onchange=e=>{ g.on=e.target.checked; g.obj.visible=g.on; highlight(); }; groupsEl.appendChild(l); }
+  presetsEl.innerHTML='';
+  for(const [n,list,cam] of cur.presets){ const b=document.createElement('button'); b.className='pre'; b.textContent=n; b.onclick=()=>{ cur.setPreset(list); if(cam) camTo(cam); renderGroups(); highlight(); }; presetsEl.appendChild(b); }
+}
+function indexHTML(){
+  let h='<h3>Índice de estructuras</h3><div class="idx">'; const byG={};
+  for(const it of Object.values(cur.items)){ if(it.id==='nodes_tbl'||it.grp==='cortes') continue; const g=(it.objs[0]&&it.objs[0].userData.gid)||'organ'; (byG[g]=byG[g]||[]).push(it); }
+  for(const g of cur.groups){ const arr=byG[g.id]; if(!arr) continue; h+=`<div><b>${g.name}:</b> ${arr.map(it=>`<a data-item="${it.id}">${it.name.replace(/^Grupo /,'').split(' · ')[0]}</a>`).join('')}</div>`; }
+  return h+'</div>';
+}
+let guideOn=false; const gctx={gtab:'g'};
+function renderInfo(){
+  const tbtn=`<div style="margin:0 0 8px">${cur.id==='pared'?'<button class="btn" data-settool="defect">Simular defecto y malla</button><button class="btn" data-settool="trocar">Planificar trócares</button>':''}<button class="btn" data-settool="measure">Medir</button>${cur.id!=='pac'?'<button class="btn" data-settool="ct">Corte TC</button>':''}${cur.id!=='pac'?'<button class="btn" data-quiz>Modo examen</button>':''}<button class="btn" data-guides>Guías · calculadoras · informe</button></div>`;
+  const tp=tool?toolPanel():'';
+  if(guideOn&&!techState&&!(quiz&&quiz.q)){ gctx.BAR=BAR; gctx.auto=reportAuto; gctx.close=()=>{guideOn=false; renderInfo();}; infoEl.innerHTML=tp+guidesHTML(cur.id,gctx); wireGuides(infoEl,cur.id,gctx,renderInfo); }
+  else if(techState) infoEl.innerHTML=tp+techPanel();
+  else if(quiz&&quiz.q) infoEl.innerHTML=tp+quizPanel();
+  else if(!sel||!cur.items[sel]) infoEl.innerHTML=tp+tbtn+cur.intro+(cur.id==='ueg'?uegPanels():'')+techListHTML()+indexHTML();
+  else { const it=cur.items[sel]; infoEl.innerHTML=`<h2><span class="tag" style="background:${it.color}"></span>${it.name}</h2>${it.html}<p style="margin-top:14px"><a data-back="1">← Volver al resumen</a></p>`; }
+  infoEl.querySelectorAll('a[data-item]').forEach(a=>a.onclick=e=>{e.preventDefault(); select(a.dataset.item);});
+  infoEl.querySelectorAll('a[data-back]').forEach(a=>a.onclick=e=>{e.preventDefault(); select(null);});
+  infoEl.querySelectorAll('a[data-item-info]').forEach(a=>a.onclick=e=>{e.preventDefault(); const k=a.dataset.itemInfo; techState=null; select(k);});
+  infoEl.querySelectorAll('[data-settool]').forEach(b=>b.onclick=()=>setTool(b.dataset.settool));
+  infoEl.querySelectorAll('[data-tool-off]').forEach(b=>b.onclick=()=>setTool(tool));
+  infoEl.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>{ clearTool(); toolState.trocars=[]; toolState.defects=[]; toolState.sum=null; toolState.pts=[]; toolState.res=undefined; toolState.closed=false; renderInfo(); });
+  infoEl.querySelectorAll('input[data-p]').forEach(r=>r.onchange=r.oninput=()=>{ toolState[r.dataset.p]=+r.value; const D=toolState.defects; if(D.length&&r.dataset.p!=='ov'){ const d=D[D.length-1]; d.W=toolState.W; d.L=toolState.L; } if(D.length) drawDefect(); else renderInfo(); });
+  infoEl.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>{ toolState.mmode=b.dataset.mm; clearTool(); toolState.pts=[]; toolState.res=undefined; toolState.closed=false; renderInfo(); });
+  infoEl.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeArea);
+  infoEl.querySelectorAll('[data-adddef]').forEach(b=>b.onclick=()=>{ toolState.add=true; });
+  infoEl.querySelectorAll('[data-ax]').forEach(b=>b.onclick=()=>{ toolState.ct.axis=b.dataset.ax; const r=ctRange(); toolState.ct.pos=(r[0]+r[1])/2; renderInfo(); updateCT(); });
+  infoEl.querySelectorAll('[data-ctpos]').forEach(r=>r.oninput=()=>{ toolState.ct.pos=+r.value; r.nextElementSibling.textContent=(+r.value).toFixed(1); updateCT(); });
+  if(tool==='ct') setTimeout(drawCT,0);
+  infoEl.querySelectorAll('[data-barrett]').forEach(r=>r.oninput=()=>{ BAR[r.dataset.barrett]=+r.value; r.nextElementSibling.textContent=r.value+' cm'; highlight(); });
+  infoEl.querySelectorAll('[data-hsa]').forEach(r=>r.oninput=()=>{ HSA[r.dataset.hsa]=+r.value; renderInfo(); });
+  infoEl.querySelectorAll('[data-tech]').forEach(b=>b.onclick=()=>startTech(b.dataset.tech));
+  infoEl.querySelectorAll('[data-tprev]').forEach(b=>b.onclick=()=>{ techState.k--; applyStep(); });
+  infoEl.querySelectorAll('[data-tnext]').forEach(b=>b.onclick=()=>{ if(techState.k<techState.tech.steps.length-1){ techState.k++; applyStep(); } else endTech(); });
+  infoEl.querySelectorAll('[data-tend]').forEach(b=>b.onclick=endTech);
+  infoEl.querySelectorAll('[data-lap]').forEach(b=>b.onclick=()=>{ const st=techState.tech.steps[techState.k]; techState.lapOn=!techState.lapOn; if(techState.lapOn){ const P=k=>EX.lap[k]||EX.pts[k]; makeControls(V(0,1,0)); for(const gid of ['liver','big','retro','medias']) if(cur.gmap[gid]){ cur.gmap[gid].on=false; cur.gmap[gid].obj.visible=false; } renderGroups(); camTo({p:P(st.lap.p),t:P(st.lap.t),fov:62}); } else applyStep(); renderInfo(); });
+  infoEl.querySelectorAll('[data-quiz]').forEach(b=>b.onclick=startQuiz);
+  infoEl.querySelectorAll('[data-guides]').forEach(b=>b.onclick=()=>{ guideOn=true; sel=null; highlight(); renderInfo(); });
+  infoEl.querySelectorAll('[data-qa]').forEach(b=>b.onclick=()=>quizAnswer(b.dataset.qa));
+  infoEl.querySelectorAll('[data-qnext]').forEach(b=>b.onclick=()=>{ newQuestion(); renderInfo(); });
+  infoEl.querySelectorAll('[data-qend]').forEach(b=>b.onclick=()=>{ quiz=null; sel=null; highlight(); renderInfo(); });
+  if(cur.id==='pac') wirePac();
+}
+function ensureOn(gid){ const g=cur.gmap[gid]; if(g&&!g.on){ g.on=true; g.obj.visible=true; renderGroups(); } }
+function select(id){
+  if(quiz&&quiz.q&&quiz.q.type==='tap'&&!quiz.q.res){ if(id) quizAnswer(id); return; }
+  if(quiz&&quiz.q&&quiz.q.type==='mc') return;
+  sel=id; if(id) guideOn=false;
+  if(id&&cur.items[id]){ const it=cur.items[id]; if(it.objs[0]) ensureOn(it.objs[0].userData.gid);
+    if(['I','II','III'].includes(id)) ensureOn('sie'); if(EHSI[id]) ensureOn('ehs'); if(['cardia','fundus','cuerpo','antro','pyl','eso_t','eso_a'].includes(id)) ensureOn('organ'); }
+  highlight(); renderInfo();
+  if(id&&window.innerWidth<=820) infoEl.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function show(id){
+  guideOn=false; { const st=document.getElementById('nvStage'); if(st) st.style.display=(id==='pac'&&nvVis)?'block':'none'; }
+  if(cur){ tool=null; clearTool(); techState=null; quiz=null; for(const k in (cur.techMap||{})) cur.techMap[k].visible=false; }
+  if(!views[id]) id='pared'; cur=views[id]; sel=null;
+  cur.scene.add(camera); makeControls(cur.up||new THREE.Vector3(0,1,0));
+  for(const v of Object.values(views)) v.layer.style.display=v===cur?'':'none';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===id));
+  for(const g of cur.groups) g.obj.visible=g.on;
+  document.getElementById('explodeW').style.display=cur.explode?'':'none';
+  const TL=cur.tools||[]; document.getElementById('opW').style.display=TL.includes('liver')?'':'none'; document.getElementById('perW').style.display=TL.includes('perit')?'':'none';
+  document.getElementById('skinW').style.display=TL.includes('skin')?'':'none'; document.getElementById('hhW').style.display=TL.includes('hh')?'':'none'; document.getElementById('bDia').style.display=TL.includes('dia')?'':'none';
+  document.getElementById('bMeasure').classList.remove('on'); for(const [id,k] of [['bObese','obese'],['bFem','fem'],['bCT','ct']]) document.getElementById(id).style.display=TL.includes(k)?'':'none'; renderer.clippingPlanes=[]; if(camera.fov!==36){ camera.fov=36; camera.updateProjectionMatrix(); } document.getElementById('gwrap').style.display=cur.id==='pac'?'none':'';
+  applyExplode(); cur.home(); renderGroups(); highlight(); renderInfo();
+}
+function applyExplode(){ if(!cur.explode) return; const e=+document.getElementById('explode').value; for(const g of cur.groups) g.obj.position.z=g.ez*e; }
+document.getElementById('explode').oninput=applyExplode;
+document.getElementById('liverOp').oninput=e=>{ for(const m of (cur.liverMats||[])){ m.opacity=+e.target.value; m.depthWrite=m.opacity>.95; m.needsUpdate=true; } };
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ try{location.hash=t.dataset.v;}catch(e){} show(t.dataset.v); });
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1); if(views[h]&&views[h]!==cur) show(h);});
+document.getElementById('bReset').onclick=()=>cur.home();
+document.getElementById('bSpin').onclick=e=>{controls.autoRotate=!controls.autoRotate; e.currentTarget.classList.toggle('on',controls.autoRotate);};
+document.getElementById('bLbl').onclick=e=>{showLbl=!showLbl; e.currentTarget.classList.toggle('on',showLbl);};
+
+const ray=new THREE.Raycaster(); ray.firstHitOnly=true; const ptr=new THREE.Vector2(); let down=null;
+function visiblePick(){ return cur.pick.filter(o=>cur.gmap[o.userData.gid].on); }
+renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('pointerup',e=>{
+  if(!down) return; const mv=Math.hypot(e.clientX-down.x,e.clientY-down.y); down=null; if(mv>6) return;
+  if(tool){ toolClick(e); return; }
+  const r=renderer.domElement.getBoundingClientRect(); ptr.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ptr,camera); ray.firstHitOnly=false;
+  const hits=ray.intersectObjects(visiblePick(),false); let id=null;
+  for(const h of hits){ const o=h.object; if(o.material&&o.material.transparent&&o.material.opacity<.4&&!o.userData.item?.startsWith('h')) { if(o.userData.gid==='liver') continue; }
+    id=o.userData.classify?o.userData.classify(h):o.userData.item; if(id) break; }
+  select(id&&id!==sel?id:null);
+});
+function resize(){const w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage); resize();
+
+const tmp=V(0,0,0), wp=V(0,0,0), dir=V(0,0,0); let frame=0;
+const occRay=new THREE.Raycaster(); occRay.firstHitOnly=true;
+function updateLabels(){
+  const w=stage.clientWidth,h=stage.clientHeight; frame++;
+  const doOcc=frame%8===0; const occObjs=doOcc?visiblePick().filter(o=>o.isMesh&&!(o.material.transparent&&o.material.opacity<.6)&&o.geometry.boundsTree):null;
+  for(const L of cur.labels){
+    const g=L.gid?cur.gmap[L.gid]:{on:true,obj:{position:{z:0}}};
+    if(L.hideHH){ L.el.style.display='none'; continue; }
+    if(!g.on||(!showLbl&&!L.keep&&!(sel&&L.item===sel))){L.el.style.display='none'; continue;}
+    wp.copy(L.p); wp.z+=g.obj.position.z; tmp.copy(wp).project(camera);
+    let vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;
+    if(vis&&doOcc){ dir.copy(wp).sub(camera.position); const dist=dir.length(); dir.normalize(); occRay.set(camera.position,dir); occRay.far=dist-.6; L.occ=occRay.intersectObjects(occObjs,false).length>0; }
+    L.el.style.display=vis?'':'none';
+    if(vis){ L.el.style.left=((tmp.x+1)/2*w)+'px'; L.el.style.top=((1-tmp.y)/2*h)+'px'; L.el.style.opacity=(L.occ&&!(sel&&L.item===sel))?'.28':'1'; }
+  }
+}
+function loop(){controls.update(); renderer.render(cur.scene,camera); updateLabels(); requestAnimationFrame(loop);}
+window.__V=views; window.__setCam=(p,t)=>{camera.position.set(...p); controls.target.set(...t); controls.update();};
+show(location.hash.slice(1)||'pared'); loop();
+</script>
+</body>
+</html>
