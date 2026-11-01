@@ -99,6 +99,7 @@
     <button class="tab" data-v="ingle">Región inguinal (TAPP/TEP)</button>
     <button class="tab" data-v="ueg">Unión esofagogástrica</button>
     <button class="tab" data-v="cr">Colorrectal</button>
+    <button class="tab" data-v="cuello">Tiroides y paratiroides</button>
     <button class="tab" data-v="pac">Mi paciente</button>
   </div>
 </header>
@@ -166,8 +167,15 @@ async function fetchBin(url){
   for(;;){const {done,value}=await rd.read(); if(done) break; chunks.push(value); got+=value.length; pbar.style.width=Math.min(100,got/total*100)+'%';}
   const out=new Uint8Array(got); let o=0; for(const c of chunks){out.set(c,o); o+=c.length;} return out.buffer;
 }
-const [MAN,BUF,EX]=await Promise.all([fetch('manifest.json').then(r=>r.json()),fetchBin('anatdata.json').then(async b=>{ const t=JSON.parse(new TextDecoder().decode(b)).gz; const bin=atob(t); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(ds).arrayBuffer(); }),fetch('extras.json').then(r=>r.json())]);
+const [MAN,BUF,EX,NK]=await Promise.all([fetch('manifest.json').then(r=>r.json()),fetchBin('anatdata.json').then(async b=>{ const t=JSON.parse(new TextDecoder().decode(b)).gz; const bin=atob(t); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(ds).arrayBuffer(); }),fetch('extras.json').then(r=>r.json()),fetch('neckdata.json').then(r=>r.json()).catch(()=>null)]);
 const GEO={}, TAG={};
+async function gunzipB64(t){ const bin=atob(t); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }
+function decodeInto(man,BUF,pre=''){ for(const e of man){
+  const q=new Uint16Array(BUF,e.vo,e.n*3), p=new Float32Array(e.n*3);
+  for(let i=0;i<e.n;i++) for(let k=0;k<3;k++) p[i*3+k]=e.min[k]+q[i*3+k]/65535*(e.max[k]-e.min[k]);
+  const idx=e.i32?new Uint32Array(BUF,e.io,e.m*3):new Uint16Array(BUF,e.io,e.m*3);
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(p,3)); g.setIndex(new THREE.BufferAttribute(idx.slice(),1)); g.computeVertexNormals(); g.computeBoundsTree(); GEO[pre+e.id]=g; } }
+if(NK) decodeInto(NK.man,await gunzipB64(NK.gz),'n_');
 for(const e of MAN){
   const q=new Uint16Array(BUF,e.vo,e.n*3), p=new Float32Array(e.n*3);
   for(let i=0;i<e.n;i++) for(let k=0;k<3;k++) p[i*3+k]=e.min[k]+q[i*3+k]/65535*(e.max[k]-e.min[k]);
@@ -843,6 +851,119 @@ function buildCR(){
   return v;
 }
 
+/* ======================= TIROIDES Y PARATIROIDES ======================= */
+function buildCuello(){
+  const v=new View('cuello');
+  v.group('glandula','Tiroides','#a8483e',true);
+  v.group('paratir','Paratiroides','#d9a441',true);
+  v.group('nerv','Nervios (NLR, NLS, vago, simpático)','#f0d050',true);
+  v.group('vasos','Vasos tiroideos','#c4211b',true);
+  v.group('grandes','Carótidas, yugulares y subclavias','#7a2a8a',true);
+  v.group('laringe','Laringe e hioides','#b9d0d6',true);
+  v.group('visc','Tráquea, esófago y faringe','#d8b4a0',true);
+  v.group('musc','Musculatura infrahioidea y constrictor','#a63d33',false);
+  v.group('scm','Esternocleidomastoideo y platisma','#a63d33',false);
+  v.group('huesos','Columna, esternón, clavículas, 1.ª costilla','#e6d8bb',true);
+  v.group('refs','Referencias quirúrgicas','#ffffff',true);
+  v.group('niveles','Niveles ganglionares','#5fd18b',false);
+  v.group('ectop','Paratiroides ectópicas (posiciones)','#d9a441',false);
+  v.group('variant','Variante: nervio laríngeo no recurrente','#ff9f43',false);
+  const T=(id,name,c,sub,lim,b,ex='')=>v.item(id,{name,color:c,html:info(sub,lim,b,ex)});
+  const N=id=>'n_'+id, S=['R','L'];
+  const bone=physMat({roughness:.72,clearcoat:.05},{amp:.02,freq:3});
+  const add=(g,id,c,it,o={})=>v.add(g,meshOf(N(id),c,o),it);
+  add('glandula','thyroid',0xb0503a,'thyroid',{vary:.07,m:{clearcoat:.75,clearcoatRoughness:.22},r:{amp:.02,freq:7}});
+  for(const s of S){ add('paratir','pt_sup_'+s,0xd9a441,'pt_sup',{vary:.1}); add('paratir','pt_inf_'+s,0xd9a441,'pt_inf',{vary:.1}); }
+  for(const s of S){ add('nerv','vag_'+s,0xf0d050,'vagus',{vary:.05}); add('nerv','symp_'+s,0xe8d68a,'symp',{vary:.05}); }
+  const A=(id,it)=>add('vasos',id,COL.art,it,{vary:.05,m:{clearcoat:.6}}), W=(id,it,g='vasos')=>add(g,id,COL.vein,it,{vary:.05,m:{clearcoat:.6}});
+  for(const s of S){ A('ita_'+s,'ita'); A('tct_'+s,'ita'); W('stv_'+s,'stv');
+    for(const [id,it] of [['cca_','carotid'],['ica_','carotid'],['eca_','carotid'],['sca_','subcl'],['vert_','subcl']]) add('grandes',id+s,COL.art,it,{vary:.05,m:{clearcoat:.6}});
+    for(const [id,it] of [['ijv_','ijv'],['ejv_','ijv'],['ajv_','ijv'],['scv_','subcl'],['bcv_','ijv']]) W(id+s,it,'grandes'); }
+  add('grandes','bct',COL.art,'subcl',{vary:.05,m:{clearcoat:.6}}); add('grandes','arch',COL.art,'subcl',{vary:.05,m:{clearcoat:.6}});
+  const cart=physMat({vertexColors:true,roughness:.45,clearcoat:.5},{amp:.015,freq:3});
+  add('laringe','thycart',COL.cart,'larynx',{mat:cart}); add('laringe','cricoid',COL.cart,'larynx',{mat:cart.clone()}); add('laringe','aryt',COL.cart,'larynx',{mat:cart.clone()}); add('laringe','hyoid',COL.bone,'larynx',{mat:bone});
+  add('visc','trachea',0xdcc6b4,'trachea',{vary:.1,r:{fiber:[0,1,0],amp:.03,freq:5}}); add('visc','esoph',COL.eso,'esoph',{vary:.12}); add('visc','pharynx',COL.eso,'esoph',{vary:.12});
+  for(const s of S){ add('laringe','ct_'+s,COL.muscle,'ctm',{r:{fiber:[0,1,0]}});
+    for(const [id,it] of [['sth_','strap'],['stt_','strap'],['thh_','strap'],['omo_','strap'],['ipc_','ipc']]) add('musc',id+s,COL.muscle,it,{r:{fiber:[0,1,0]}});
+    add('scm','scm_'+s,COL.muscle,'scm',{r:{fiber:[0,1,0]}}); add('scm','plat_'+s,0xb0544a,'scm',{m:{transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide},r:{fiber:[0,1,0]}});
+    add('musc','lcol_'+s,COL.muscle,'prevert',{r:{fiber:[0,1,0]}}); add('musc','sca_m_'+s,COL.muscle,'prevert',{r:{fiber:[0,1,0]}}); }
+  for(const id of ['verts','manub','clav','rib1']) add('huesos',id,COL.bone,'bones',{mat:bone});
+  for(const L of NK.lines) v.add(L.g,tubeMesh(L),L.item);
+  const P=NK.pts;
+  const dot=(p,c,r=.18,op=1)=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),new THREE.MeshPhysicalMaterial({color:c,roughness:.4,clearcoat:.5,transparent:op<1,opacity:op})); m.position.set(...p); return m; };
+  const ring=(p,c)=>{ const m=new THREE.Mesh(new THREE.TorusGeometry(.32,.06,10,28),new THREE.MeshBasicMaterial({color:c,depthTest:false})); m.position.set(...p); m.renderOrder=6; return m; };
+  for(const s of S){ v.add('refs',ring(P['berry_'+s],0x00e5ff),'berry'); v.add('refs',ring(P['zk_'+s],0x7cff6b),'zk'); }
+  v.add('refs',dot(P.delph,0x5fd18b,.2),'delph');
+  // posiciones ectópicas habituales de las paratiroides (esquemáticas)
+  const EC=[['Timo / mediastino anterosuperior',[.9,-6.4,1.6]],['Ligamento tirotímico',[1.0,-3.6,1.2]],['Retroesofágica / paraesofágica',[-.7,-.8,-2.4]],['Intratiroidea',[-1.9,-.6,.9]],['Vaina carotídea / no descendida',[-2.6,2.6,.2]]];
+  for(const [t,p] of EC){ v.add('ectop',dot(p,0xd9a441,.2,.7),'ectop'); v.label('ectop',p,t,{item:'ectop',cls:'node'}); }
+  // niveles ganglionares
+  const boxM=(b,c)=>{ const g=new THREE.BoxGeometry(b[1]-b[0],b[3]-b[2],b[5]-b[4]); const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.1,depthWrite:false}));
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.7}))); m.position.set((b[0]+b[1])/2,(b[2]+b[3])/2,(b[4]+b[5])/2); return m; };
+  const LC={VI:0x5fd18b,VII:0x3fc1df,II:0xf2c14e,III:0xf08a3c,IV:0xe04f5f,V:0xa35de8};
+  for(const k in NK.box){ const lv=k.replace(/[RL]$/,''); v.add('niveles',boxM(NK.box[k],LC[lv]),'lvl'+lv); }
+  for(const L of NK.labels){ let g=L.g; if(L.item==='scm') g='scm'; if(['carotid','ijv'].includes(L.item)) g='grandes'; v.label(g,L.p,L.t,{item:L.item,cls:L.cls||''}); }
+  v.label('variant',[-2.0,1.1,.2],'NLR no recurrente (variante)',{item:'nrln'});
+
+  T('thyroid','Glándula tiroides','#a8483e','Modelo con proporciones anatómicas (no es malla de cadáver)','Dos lóbulos unidos por el istmo, que cruza por delante de los anillos traqueales 2.º–4.º; lóbulo piramidal inconstante hacia el hioides. Envuelta por la fascia pretraqueal (cápsula falsa) sobre su cápsula verdadera.',['Disección capsular (pegada a la glándula) para preservar paratiroides y su irrigación.','El ligamento de Berry fija la cara posteromedial al cricoides y primeros anillos: zona de mayor riesgo para el NLR.','Lobectomía = lóbulo + istmo; tiroidectomía total = ambos lóbulos.'],'<div class="warn">Glándula modelada sobre la tráquea y laringe reales: lóbulos ≈ 4,7 cm, istmo en los anillos 2.º–4.º, tubérculo de Zuckerkandl y lóbulo piramidal incluidos. Forma orientativa.</div>');
+  T('isthmus','Istmo y lóbulo piramidal','#a8483e','Referencia','Sobre los anillos 2.º–4.º. El lóbulo piramidal (≈ 40–50 %) asciende desde el istmo, más a menudo a la izquierda.',['Resecar el lóbulo piramidal en la tiroidectomía total (remanente → recidiva en Graves o captación en el rastreo).','Istmectomía en tumores pequeños limitados al istmo.']);
+  T('pt_sup','Paratiroides superiores','#d9a441','Mallas Z-Anatomy recolocadas en su posición típica','Derivan de la 4.ª bolsa faríngea y migran poco: posición más constante. Habitualmente en la cara posterior del lóbulo, a la altura de la unión cricotiroidea, ≈ 1 cm por encima del cruce NLR–arteria tiroidea inferior y dorsales al plano del NLR.',['Se lesionan al ligar el polo superior o al disecar el ligamento de Berry.','Preservarlas in situ con su pedículo; si se desvascularizan: autotrasplante (AAES 2020).']);
+  T('pt_inf','Paratiroides inferiores','#d9a441','Mallas Z-Anatomy recolocadas en su posición típica','Derivan de la 3.ª bolsa junto con el timo y migran más: posición variable. Habitualmente cerca del polo inferior, ventrales al plano del NLR, a veces en el ligamento tirotímico.',['Mayor riesgo en el vaciamiento central (nivel VI).','Buscar en el timo cervical si no se encuentran (ver «Paratiroides ectópicas»).']);
+  T('ectop','Paratiroides ectópicas (posiciones habituales)','#d9a441','Esquema','Inferiores: timo y mediastino anterosuperior, ligamento tirotímico, vaina carotídea (no descendidas). Superiores: retroesofágica/paraesofágica, posterior al polo superior, intratiroidea (rara).',['En la exploración de hiperparatiroidismo sin localizar la glándula: explorar timo cervical, vaina carotídea, retroesófago y valorar lobectomía tiroidea ipsilateral.']);
+  T('rln','Nervios laríngeos recurrentes','#f0d050','Trazado esquemático sobre la anatomía real','El derecho rodea la subclavia y asciende oblicuo hacia el surco traqueoesofágico; el izquierdo rodea el cayado aórtico y asciende más vertical en el surco. Entran en la laringe bajo el borde inferior del constrictor inferior, posteriores a la articulación cricotiroidea.',['Relación variable con la arteria tiroidea inferior (por delante, por detrás o entre sus ramas): identificar el nervio antes de ligar ramas.','Ramificación extralaríngea frecuente; las fibras motoras suelen ir en la rama anterior.','Triángulo de Simon (carótida común, esófago, arteria tiroidea inferior) para localizarlo en la parte baja del cuello.','Lesión unilateral: disfonía; bilateral: compromiso de vía aérea. Neuromonitorización (V1-R1-R2-V2).']);
+  T('nrln','Nervio laríngeo inferior no recurrente','#ff9f43','Variante (esquema)','Sale directamente del vago cervical hacia la laringe, sin rodear la subclavia. Casi siempre derecho y asociado a subclavia derecha aberrante (arteria lusoria); el izquierdo es excepcional (situs inversus).',['Sospecharlo si la TC o la ecografía muestran arteria lusoria.','Con neuromonitorización: señal vagal presente por encima pero no por debajo del nivel de la laringe sugiere no recurrente.']);
+  T('ebsln','Rama externa del nervio laríngeo superior','#ffe27a','Trazado esquemático','Motora del músculo cricotiroideo (tensión de las cuerdas, tonos agudos). Desciende sobre el constrictor inferior, medial a los vasos tiroideos superiores.',['Clasificación de Cernea: tipo 1 cruza la arteria tiroidea superior > 1 cm por encima del polo; tipo 2a a < 1 cm; tipo 2b por debajo del borde superior del polo (mayor riesgo).','Ligar las ramas de la arteria tiroidea superior una a una, pegado a la cápsula del polo superior; abrir el espacio avascular esternotiroideo–laríngeo (Reeves).']);
+  T('sln','Nervio laríngeo superior (tronco y rama interna)','#ffe27a','Trazado esquemático','Nace del ganglio inferior del vago; la rama interna (sensitiva) atraviesa la membrana tirohioidea con la arteria laríngea superior.',['Lesión de la rama interna: alteración de la sensibilidad supraglótica y aspiración.']);
+  T('vagus','Nervio vago','#f0d050','Malla Z-Anatomy','En la vaina carotídea, posterior y entre carótida común y yugular interna.',['Estimulación vagal en la neuromonitorización (V1 antes y V2 después de la resección); la monitorización continua usa un electrodo sobre el vago.']);
+  T('symp','Tronco simpático cervical','#e8d68a','Malla Z-Anatomy','Sobre la fascia prevertebral, posterior a la vaina carotídea.',['Lesión (vaciamiento lateral, disección profunda): síndrome de Horner.']);
+  T('sta','Arteria tiroidea superior','#c4211b','Trazado esquemático','Primera rama de la carótida externa; desciende hacia el polo superior acompañada de la vena tiroidea superior y próxima a la rama externa del NLS.',['Ligadura selectiva de ramas pegada a la glándula para no lesionar la rama externa del NLS.']);
+  T('ita','Arteria tiroidea inferior y tronco tirocervical','#c4211b','Mallas Z-Anatomy','Del tronco tirocervical (subclavia), asciende y cruza por detrás de la carótida hacia la cara posterior del lóbulo. Irriga la mayoría de las paratiroides, superiores incluidas.',['No ligar el tronco: ligar ramas terciarias en la cápsula para preservar la irrigación paratiroidea.','Referencia para el NLR (cruce) y para la paratiroides superior (≈ 1 cm por encima del cruce).']);
+  T('stv','Venas tiroideas superiores','#2e4fae','Mallas Z-Anatomy','Drenan el polo superior hacia la yugular interna.',[]);
+  T('mtv','Vena tiroidea media','#2e4fae','Trazado esquemático','Inconstante; de la cara lateral del lóbulo a la yugular interna.',['Suele ser el primer vaso que se liga para luxar medialmente el lóbulo.']);
+  T('itv','Venas tiroideas inferiores','#2e4fae','Trazado esquemático','Plexo pretraqueal que drena hacia el tronco braquiocefálico izquierdo.',['Sangrado en el polo inferior y en el vaciamiento central; a veces hay una arteria tiroidea ima (rama del tronco braquiocefálico o del cayado).']);
+  T('carotid','Carótidas común, interna y externa','#c4211b','Mallas Z-Anatomy','La carótida común se bifurca a la altura del borde superior del cartílago tiroides.',['Límite lateral del compartimento central (nivel VI).']);
+  T('ijv','Venas yugulares y braquiocefálicas','#2e4fae','Mallas Z-Anatomy','La yugular interna es lateral a la carótida en la vaina.',['Eje del vaciamiento lateral (niveles II–IV).']);
+  T('subcl','Subclavias, tronco braquiocefálico, cayado y vertebrales','#c4211b','Mallas Z-Anatomy','El NLR derecho rodea la subclavia; el izquierdo, el cayado.',['La arteria innominada marca el límite inferior del nivel VII.']);
+  T('larynx','Cartílagos tiroides, cricoides, aritenoides e hioides','#b9d0d6','Mallas Z-Anatomy','El NLR entra en la laringe posterior a la articulación cricotiroidea.',['Referencias de los niveles: hioides (II/III), cricoides (III/IV).']);
+  T('ctm','Músculo cricotiroideo','#a63d33','Mallas Z-Anatomy','Inervado por la rama externa del NLS.',['Su contracción (twitch) al estimular confirma la rama externa en la neuromonitorización.']);
+  T('trachea','Tráquea','#dcc6b4','Malla Z-Anatomy','',['Lesión térmica posterior-lateral por energía junto al ligamento de Berry.']);
+  T('esoph','Esófago y faringe','#c9837a','Mallas Z-Anatomy','Posterior a la tráquea; el NLR va en el surco traqueoesofágico.',[]);
+  T('strap','Músculos infrahioideos (esternohioideo, esternotiroideo, tirohioideo, omohioideo)','#a63d33','Mallas Z-Anatomy','Separados por la línea media cervical; inervados por el asa cervical, que entra por su parte baja.',['En bocios grandes pueden seccionarse en su tercio superior para respetar la inervación.']);
+  T('ipc','Constrictor inferior de la faringe','#a63d33','Mallas Z-Anatomy','El NLR entra en la laringe bajo su borde inferior (cricofaríngeo).',[]);
+  T('scm','Esternocleidomastoideo y platisma','#a63d33','Mallas Z-Anatomy','Colgajos subplatismales en la cervicotomía.',['El borde anterior del ECM es referencia del vaciamiento lateral.']);
+  T('prevert','Músculos prevertebrales (largo del cuello, escaleno anterior)','#a63d33','Mallas Z-Anatomy','El nervio frénico desciende sobre el escaleno anterior (no modelado).',['Suelo del vaciamiento lateral: respetar la fascia prevertebral (frénico, plexo braquial).']);
+  T('bones','Columna cervical, manubrio, clavículas y 1.ª costilla','#e6d8bb','Mallas Z-Anatomy','',[]);
+  T('berry','Ligamento de Berry (suspensorio posterior)','#00e5ff','Marcador','Une la cara posteromedial del lóbulo al cricoides y primeros anillos; el NLR pasa junto a él o lo atraviesa antes de entrar en la laringe.',['Disección final del lóbulo: con el nervio visualizado, sin energía térmica junto al nervio.']);
+  T('zk','Tubérculo de Zuckerkandl','#7cff6b','Marcador','Proyección posterolateral del lóbulo a la altura del cruce del NLR.',['El NLR suele quedar medial y profundo al tubérculo: rotarlo medialmente para encontrar el nervio.','La paratiroides superior suele estar craneal y dorsal al tubérculo.']);
+  T('delph','Ganglio delfiano (prelaríngeo)','#5fd18b','Marcador','Sobre la membrana cricotiroidea; pertenece al nivel VI.',['Su afectación en el carcinoma papilar se asocia a enfermedad ganglionar más extensa.']);
+  T('lvlVI','Nivel VI · compartimento central','#5fd18b','Esquema (AAO-HNS)','Hioides (arriba), escotadura esternal (abajo), carótidas comunes (lados): prelaríngeos, pretraqueales y paratraqueales.',['Vaciamiento central terapéutico si hay ganglios centrales afectados; el profiláctico es una decisión individual (ver guías).','Riesgo principal: hipoparatiroidismo (paratiroides inferiores) y NLR.']);
+  T('lvlVII','Nivel VII · mediastino superior','#3fc1df','Esquema','De la escotadura esternal a la arteria innominada.',[]);
+  T('lvlII','Nivel II','#f2c14e','Esquema','Base de cráneo al hioides, alrededor de la yugular interna (IIA delante y IIB detrás del nervio espinal).',['El nervio espinal accesorio cruza el nivel II.']);
+  T('lvlIII','Nivel III','#f08a3c','Esquema','Del hioides al cricoides, a lo largo de la yugular interna.',[]);
+  T('lvlIV','Nivel IV','#e04f5f','Esquema','Del cricoides a la clavícula; incluye el riesgo del conducto torácico a la izquierda.',['Fístula quilosa en vaciamientos del nivel IV izquierdo.']);
+  T('lvlV','Nivel V · triángulo posterior','#a35de8','Esquema','Detrás del borde posterior del ECM.',['Nervio espinal accesorio en el triángulo posterior.']);
+
+  v.presets=[['Tiroides',['glandula','paratir','nerv','vasos','grandes','laringe','visc','huesos','refs']],
+    ['Visión lateral dch.',['glandula','paratir','nerv','vasos','laringe','visc','refs'],{t:[-1,0,0],d:[-1,.1,.25],w:12,h:12}],
+    ['Visión posterior',['glandula','paratir','nerv','vasos','laringe','visc','refs'],{t:[0,-.5,0],d:[0,.1,-1],w:12,h:12}],
+    ['Polo superior y NLS',['glandula','paratir','nerv','vasos','grandes','laringe','visc'],{t:[1.8,1.5,.5],d:[.9,.25,.6],w:9,h:9}],
+    ['Paratiroides',['glandula','paratir','nerv','vasos','laringe','visc','ectop'],{t:[0,-1.5,0],d:[-.6,.1,-.8],w:13,h:13}],
+    ['Niveles ganglionares',['glandula','grandes','laringe','visc','huesos','niveles'],{t:[0,-.5,0],d:[.35,.15,1],w:20,h:20}],
+    ['Capas',['glandula','paratir','nerv','vasos','grandes','laringe','visc','musc','scm','huesos']]];
+  v.tools=['measure','ct'];
+  v.home=()=>fit(V(0,-.6,.8),V(0,.08,1),11,12);
+  v.intro=`<h2>Tiroides y paratiroides</h2>
+  <p class="sub">Tiroides, paratiroides, laringe, tráquea, esófago, vasos, vago, simpático, músculos y huesos son mallas reales (Z-Anatomy, derivado de BodyParts3D). NLR, rama externa del NLS, arteria tiroidea superior, venas tiroideas media e inferior, niveles ganglionares y referencias están trazados sobre ellas.</p>
+  <h3>Puntos clave</h3>
+  <ul><li><a data-item="rln">NLR</a>: surco traqueoesofágico, cruce con la <a data-item="ita">ATI</a>, <a data-item="zk">Zuckerkandl</a> y <a data-item="berry">ligamento de Berry</a>; variante <a data-item="nrln">no recurrente</a>.</li>
+  <li><a data-item="ebsln">Rama externa del NLS</a> y ligadura selectiva de la <a data-item="sta">ATS</a> (Cernea).</li>
+  <li><a data-item="pt_sup">Paratiroides superiores</a> (constantes, dorsales al NLR) e <a data-item="pt_inf">inferiores</a> (variables, ventrales) · <a data-item="ectop">ectópicas</a>.</li>
+  <li><a data-item="lvlVI">Nivel VI</a> y vaciamiento lateral (<a data-item="lvlII">II</a>–<a data-item="lvlV">V</a>).</li></ul>
+  <div class="warn">La tiroides de Z-Anatomy estaba deformada y ≈ 1,5 cm alta, así que la glándula está <b>modelada</b> con proporciones anatómicas sobre la tráquea y la laringe reales (istmo en los anillos 2.º–4.º, polos de la línea oblicua al 6.º anillo). En este modelo la vaina carotídea estaba pegada a la tráquea y se ha desplazado ≈ 1 cm lateral. Las paratiroides son mallas reales recolocadas en sus posiciones típicas. Trazados y niveles son esquemáticos.</div>
+  <div class="src">Anatomía 3D: Z-Anatomy (CC BY-SA 4.0), basado en BodyParts3D (DBCLS, CC BY-SA 2.1 JP). Fuentes: Cernea CR et al. <i>Head Neck</i> 1992;14:380–3 · Patel KN et al. (AAES) <i>Ann Surg</i> 2020;271:e21–e93 · Randolph GW et al. (INMSG) <i>Laryngoscope</i> 2011;121:S1–S16.</div>`;
+  return v;
+}
+
 /* ======================= MI PACIENTE ======================= */
 function buildPac(){
   const v=new View('pac'); v.group('pmodels','Modelos del paciente','#5ab0ff',true);
@@ -1119,7 +1240,28 @@ const TECH={
    {t:'Línea de Toldt',d:'Liberación lateral del colon descendente y sigma por la línea blanca de Toldt.',g:['colon','recto','vasos','uro','pelvis','cr_nerves'],hl:'toldt'},
    {t:'ETM posterior',d:'Entrada en el «holy plane» por detrás del mesorrecto a nivel del promontorio; disección entre fascia mesorrectal y presacra, apartando los nervios hipogástricos.',g:['recto','meso','cr_nerves','sacro','uro','vasos'],cam:{t:[0,-17,-2],d:[-1,.2,.15],w:20,h:20},hl:'mesorectum'},
    {t:'ETM lateral y anterior',d:'Lateralmente, cuidado con el plexo hipogástrico inferior; anteriormente, plano respecto a la fascia de Denonvilliers (vesículas/próstata o vagina).',g:['recto','meso','cr_nerves','sacro','uro'],cam:{t:[0,-17,-1],d:[-.8,.2,.6],w:20,h:20},hl:'ihp'},
-   {t:'Sección y anastomosis',d:'Sección distal con margen adecuado; anastomosis colorrectal/coloanal circular, test de fuga y valorar ileostomía de protección en anastomosis bajas.',g:['colon','recto','meso','sacro','uro','floor'],cam:{t:[0,-20,-1],d:[-.6,-.2,.8],w:18,h:18},hl:'rectum'}]}]
+   {t:'Sección y anastomosis',d:'Sección distal con margen adecuado; anastomosis colorrectal/coloanal circular, test de fuga y valorar ileostomía de protección en anastomosis bajas.',g:['colon','recto','meso','sacro','uro','floor'],cam:{t:[0,-20,-1],d:[-.6,-.2,.8],w:18,h:18},hl:'rectum'}]}],
+ cuello:[
+  {id:'tt',name:'Hemitiroidectomía / tiroidectomía total',steps:[
+   {t:'Cervicotomía y colgajos',d:'Incisión transversa (Kocher) ≈ 2 traveses sobre el manubrio, en un pliegue cutáneo. Colgajos subplatismales hasta el cartílago tiroides y la escotadura esternal.',g:['glandula','laringe','visc','musc','scm','huesos'],cam:{t:[0,-1,1],d:[0,.15,1],w:16,h:16},hl:'scm'},
+   {t:'Línea media y musculatura pretiroidea',d:'Apertura de la línea media avascular y separación lateral de esternohioideo y esternotiroideo. En bocios grandes, sección alta de la musculatura para respetar el asa cervical.',g:['glandula','laringe','visc','musc','huesos'],cam:{t:[0,-1,1],d:[0,.1,1],w:13,h:13},hl:'strap'},
+   {t:'Vena tiroidea media y luxación del lóbulo',d:'Ligadura de la vena tiroidea media y tracción medial del lóbulo para abrir el espacio entre glándula y vaina carotídea.',g:['glandula','paratir','nerv','vasos','grandes','laringe','visc','refs'],cam:{t:[-1.5,-.5,.5],d:[-.9,.1,.6],w:11,h:11},hl:'mtv'},
+   {t:'Polo superior y rama externa del NLS',d:'Abrir el espacio avascular esternotiroideo–laríngeo. Ligar las ramas de la arteria tiroidea superior una a una pegado a la cápsula, lateral a la rama externa del NLS (tipo de Cernea). Confirmar con estimulación: contracción del cricotiroideo.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.8,1.2,.5],d:[-.9,.25,.6],w:9,h:9},hl:'ebsln'},
+   {t:'Paratiroides superior',d:'Identificar la paratiroides superior en la cara posterior del polo superior, cerca de la unión cricotiroidea, y separarla con su pedículo.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.5,.5,-.3],d:[-.8,.15,-.5],w:8,h:8},hl:'pt_sup'},
+   {t:'Nervio laríngeo recurrente',d:'Localizar el NLR en el surco traqueoesofágico (triángulo de Simon) o junto al tubérculo de Zuckerkandl. Neuromonitorización: V1 (vago) y R1 (nervio) antes de la resección.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.4,-1.5,-.4],d:[-.9,.1,-.45],w:9,h:9},hl:'rln'},
+   {t:'Paratiroides inferior y ramas de la ATI',d:'Identificar la paratiroides inferior cerca del polo inferior (ventral al NLR). Ligar ramas terciarias de la arteria tiroidea inferior pegadas a la glándula, nunca el tronco.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.4,-1.8,.2],d:[-.9,.05,.4],w:9,h:9},hl:'pt_inf'},
+   {t:'Ligamento de Berry',d:'Con el nervio a la vista, sección del ligamento de Berry sin energía térmica junto al nervio; liberar el lóbulo de la tráquea.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.2,-.5,-.2],d:[-.8,.1,-.6],w:7,h:7},hl:'berry'},
+   {t:'Istmo, lado contralateral y cierre',d:'Sección del istmo (hemitiroidectomía) o repetir en el lado contralateral (total; valorar no seguir si se pierde la señal del primer lado). R2/V2 al terminar. Hemostasia, cierre de la línea media. Tras una total: PTH/calcio postoperatorios.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[0,-1,1],d:[0,.1,1],w:13,h:13},hl:'isthmus'}]},
+  {id:'vc',name:'Vaciamiento central (nivel VI)',steps:[
+   {t:'Límites',d:'Hioides arriba, escotadura esternal (o arteria innominada si se incluye el VII) abajo, carótidas comunes a los lados, fascia prevertebral detrás.',g:['glandula','grandes','laringe','visc','huesos','niveles'],cam:{t:[0,-1.5,.5],d:[0,.15,1],w:14,h:14},hl:'lvlVI'},
+   {t:'Ganglios prelaríngeos y pretraqueales',d:'Incluir el ganglio delfiano sobre la membrana cricotiroidea y el tejido pretraqueal hasta el timo.',g:['glandula','laringe','visc','refs','niveles','vasos'],cam:{t:[0,-1.5,1],d:[0,.1,1],w:10,h:10},hl:'delph'},
+   {t:'Paratraqueal: el NLR guía la disección',d:'Seguir el NLR desde la entrada torácica hasta la laringe. A la derecha el nervio es más oblicuo y hay tejido por detrás de él.',g:['glandula','paratir','nerv','vasos','grandes','laringe','visc','niveles'],cam:{t:[-1.4,-3,0],d:[-.8,.15,.6],w:11,h:11},hl:'rln'},
+   {t:'Paratiroides inferiores',d:'Identificar y preservar con su pedículo; si se desvascularizan o se extirpan inadvertidamente, autotrasplante (comprobando tejido paratiroideo).',g:['glandula','paratir','nerv','vasos','laringe','visc','ectop'],cam:{t:[0,-2.5,0],d:[-.5,.1,.8],w:12,h:12},hl:'pt_inf'}]},
+  {id:'ptx',name:'Paratiroidectomía',steps:[
+   {t:'Localización preoperatoria',d:'Ecografía y gammagrafía MIBI/SPECT-TC, TC 4D o PET-colina para la cirugía focalizada; la localización no sirve para diagnosticar el hiperparatiroidismo.',g:['glandula','paratir','laringe','visc','huesos'],hl:'pt_inf'},
+   {t:'Superiores: dorsales y craneales',d:'Buscar en la cara posterior del polo superior, dorsal al plano del NLR, por encima del cruce con la ATI.',g:['glandula','paratir','nerv','vasos','laringe','visc','refs'],cam:{t:[-1.5,.5,-.3],d:[-.8,.15,-.5],w:8,h:8},hl:'pt_sup'},
+   {t:'Inferiores: ventrales y variables',d:'Polo inferior, ligamento tirotímico y timo cervical; ventrales al NLR.',g:['glandula','paratir','nerv','vasos','laringe','visc','ectop'],cam:{t:[0,-2.5,.3],d:[-.5,.1,.8],w:12,h:12},hl:'pt_inf'},
+   {t:'Ectópicas y PTH intraoperatoria',d:'Si falta una glándula: timo, vaina carotídea, retroesófago, intratiroidea. PTH intraoperatoria: el criterio de Miami considera curativa una caída > 50 % a los 10 min respecto al valor más alto basal o preexcisión.',g:['glandula','paratir','nerv','vasos','grandes','laringe','visc','ectop'],cam:{t:[0,-1.5,0],d:[-.6,.1,-.8],w:14,h:14},hl:'ectop'}]}]
 };
 let techState=null;
 function buildTechOverlays(){
@@ -1170,7 +1312,7 @@ function fit(target,dir,w,h){
   const d=Math.max(h/(2*t),w/(2*t*asp))*1.05; controls.target.copy(target); camera.position.copy(target).addScaledVector(dir.clone().normalize(),d); controls.update();
 }
 const presetsEl=document.getElementById('presets'), groupsEl=document.getElementById('groups'), infoEl=document.getElementById('info');
-buildPared(); buildIngle(); buildUEG(); buildCR(); buildPac(); buildTechOverlays();
+buildPared(); buildIngle(); buildUEG(); buildCR(); if(NK) buildCuello(); buildPac(); buildTechOverlays();
 function camTo(c){ if(c.lap){ makeControls(V(0,0,1)); cur.home(); return; } if(c.up) makeControls(V(...c.up)); else if(cur.up) makeControls(cur.up); if(c.p){ camera.position.set(...c.p); controls.target.set(...c.t); if(c.fov){ camera.fov=c.fov; camera.updateProjectionMatrix(); } controls.update(); return; } if(camera.fov!==36){ camera.fov=36; camera.updateProjectionMatrix(); } fit(V(...c.t),V(...c.d),c.w||26,c.h||30); }
 function setPer(x){ document.getElementById('perOp').value=x; for(const m of (window.PERMATS||[])){ m.opacity=x; m.depthWrite=x>.97; m.needsUpdate=true; } const g=cur.gmap.perit; if(g){ g.on=x>0.02; g.obj.visible=g.on; } }
 function setLiver(x){ document.getElementById('liverOp').value=x; for(const m of (views.ueg.liverMats||[])){ m.opacity=x; m.depthWrite=x>.95; m.needsUpdate=true; } }

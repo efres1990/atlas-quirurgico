@@ -131,6 +131,44 @@ export const GUIDES = {
     { id:'psh18cr', soc:'EHS', year:2018, title:'Prevención de hernia paraestomal', ref:'Antoniou SA et al. Hernia 2018;22:183–98', doi:'10.1007/s10029-017-1697-5',
       recs:[['Valorar malla profiláctica al construir una colostomía terminal (revisa la actualización de 2023).','F (2018)']] },
   ],
+  cuello: [
+    { id:'ata25', soc:'ATA', year:2025, title:'Cáncer diferenciado de tiroides (adultos)',
+      ref:'Ringel MD et al. Thyroid 2025;35:841–985 · resumen ejecutivo Thyroid 2025;35:1214–20', doi:'10.1177/10507256251390877',
+      recs:[
+        ['Cirugía del cáncer de tiroides por cirujano de alto volumen (≥ 25 tiroidectomías/año).','—'],
+        ['Estudios moleculares: pueden considerarse para planificar la cirugía; no de forma rutinaria.','—'],
+        ['cT1 (≤ 2 cm) sin extensión extratiroidea macroscópica y cN0M0: lobectomía como cirugía inicial, salvo cánceres bilaterales u otra indicación.','—'],
+        ['cT2N0M0 (> 2 y ≤ 4 cm) de bajo riesgo: la lobectomía puede ser preferible por menor riesgo; informar de posible conversión o totalización.','—'],
+        ['> 4 cm, extensión extratiroidea macroscópica, cN1 o cM1: tiroidectomía total y resección de los ganglios afectados.','—'],
+        ['Totalización: «puede considerarse» (antes «debería ofrecerse») por persistencia, para radioyodo o para seguimiento con tiroglobulina.','—'],
+        ['Más peso a la vigilancia activa, la decisión compartida y las técnicas ablativas.','—'],
+      ], note:'La 2025 sustituye a la ATA 2015 para el cáncer diferenciado. Grados y matices en el original.' },
+    { id:'aaes20', soc:'AAES', year:2020, title:'Tratamiento quirúrgico de la enfermedad tiroidea',
+      ref:'Patel KN et al. Ann Surg 2020;271:e21–e93', doi:'10.1097/SLA.0000000000003580',
+      recs:[
+        ['Ecografía diagnóstica en todo paciente con sospecha de nódulo tiroideo.','F (alta)'],
+        ['TSH en toda enfermedad nodular.','F (baja)'],
+        ['PAAF según criterios ecográficos, tamaño y clínica de las guías establecidas.','F (moderada)'],
+        ['Disección a lo largo de la cápsula tiroidea para preservar las paratiroides.','F (baja)'],
+        ['Si una paratiroides no puede preservarse: autotrasplante.','F (baja)'],
+        ['La biopsia intraoperatoria tiene valor para confirmar tejido paratiroideo.','F (moderada)'],
+        ['Graves con oftalmopatía moderada-grave: valorar tiroidectomía total como tratamiento definitivo de primera línea, por cirujano de alto volumen.','F'],
+      ], note:'66 recomendaciones en total (incluye neuromonitorización, vaciamientos, hipocalcemia y reoperación).' },
+    { id:'phpt22', soc:'5.º Workshop internacional', year:2022, title:'Hiperparatiroidismo primario',
+      ref:'Bilezikian JP et al. J Bone Miner Res 2022;37:2293–314', doi:'10.1002/jbmr.4677',
+      recs:[
+        ['En el hiperparatiroidismo primario asintomático se recomienda la cirugía para curar la enfermedad (con indicaciones).','F (alta)'],
+        ['Indicaciones: calcio > 1 mg/dl sobre el límite superior; osteoporosis (T ≤ −2,5) o fractura vertebral; FG < 60; litiasis o nefrocalcinosis; calciuria > 250 mg/24 h (mujeres) o > 300 mg/24 h (varones); edad < 50.','—'],
+        ['La evidencia no basta para operar solo para mejorar síntomas neurocognitivos, calidad de vida o parámetros cardiovasculares.','—'],
+      ] },
+    { id:'beth23', soc:'Bethesda', year:2023, title:'Citología tiroidea (3.ª edición)',
+      ref:'Ali SZ et al. Thyroid 2023;33:1039–44', doi:'10.1089/thy.2023.0141',
+      recs:[
+        ['Seis categorías con nombre único: I no diagnóstica, II benigna, III AUS (atipia de significado incierto), IV neoplasia folicular, V sospechosa de malignidad, VI maligna.','—'],
+        ['Riesgo medio de malignidad: I ≈ 13 %, II ≈ 4 %, III ≈ 22 %, IV ≈ 30 %, V ≈ 74 %, VI ≈ 97 %.','—'],
+        ['AUS se subdivide en atipia nuclear y otras; nomenclatura alineada con la OMS 2022.','—'],
+      ] },
+  ],
 };
 
 export const CHECKS = {
@@ -140,6 +178,8 @@ export const CHECKS = {
     items:['TC/RM de planificación revisada (anchura, área, ratio recto/defecto)','Tabaco: abandono documentado','IMC y HbA1c optimizados o decisión compartida documentada','Contaminación / estoma / ISQ previa registrada','Malla retromuscular planificada (o motivo para otra posición)','Necesidad de separación de componentes estimada (anchura > 8 cm, ratio < 1,34)','Cierre de laparotomía planificado con small bites'] }],
   ueg: [{ id:'hh', title:'Reparación de hernia de hiato y fundoplicatura', ref:'Práctica quirúrgica habitual; no son recomendaciones formales de guía',
     items:['Saco herniario resecado / reducido completamente','Esófago abdominal sin tensión (orientativo: ≥ 2–3 cm)','Vagos anterior y posterior identificados y preservados','Pilares cerrados (posterior ± anterior) sin tensión excesiva','Fundoplicatura (SAGES 2024 la sugiere de forma sistemática)','Decisión sobre malla documentada (SAGES: sin recomendación)'] }],
+  cuello: [{ id:'tt', title:'Tiroidectomía segura', ref:'AAES 2020; neuromonitorización según INMSG (Randolph 2011). Lista orientativa',
+    items:['Laringoscopia / evaluación de la voz preoperatoria según riesgo','Neuromonitorización: V1 y R1 antes de la resección','Rama externa del NLS identificada o protegida (ligadura selectiva de la ATS)','NLR identificado en todo su trayecto cervical','Paratiroides: n.º identificadas y preservadas in situ','Autotrasplante si alguna desvascularizada (y localización)','Ligadura de ramas terciarias de la ATI, no del tronco','R2 y V2 al finalizar; si pérdida de señal en el primer lado, valorar diferir el contralateral','Hemostasia (Valsalva) y plan de calcio/PTH postoperatorio'] }],
   cr: [{ id:'tme', title:'Calidad de la escisión total del mesorrecto', ref:'Quirke / MERCURY; guía holandesa CRC',
     items:['Ligadura de la AMI (alta / baja con ganglios del origen) documentada','Nervios hipogástricos y plexo preservados','Plano de la fascia mesorrectal (holy plane) respetado','Margen distal ≥ 1 cm (macroscópico)','Pieza: grado de mesorrecto (completo / casi completo / incompleto)','Margen circunferencial > 1 mm en anatomía patológica','≥ 12 ganglios en la pieza'] }],
 };
@@ -219,6 +259,32 @@ export const CALCS = {
         const sp = (g === 'T' || g === 'X') ? (chk(el,'gc') ? 'grupo 10/esplenectomía: débilmente recomendada (invasión de curvatura mayor)' : 'grupo 10/esplenectomía: no aconsejada') : '';
         const t = `JGCA D${d}: grupos ${st}. Margen ${m}${chk(el,'eso') ? ' (invasión esofágica: biopsia intraoperatoria del margen)' : ''}.${sp ? ' ' + sp + '.' : ''}`;
         return { txt:t, html:t }; } },
+  ],
+  cuello: [
+    { id:'tirads', title:'ACR TI-RADS (nódulo tiroideo)', ref:'Tessler FN et al. J Am Coll Radiol 2017;14:587–95', doi:'10.1016/j.jacr.2017.01.046',
+      form: () => row('Composición', sl('co', [['0','Quística o espongiforme'],['1','Mixta quística-sólida'],['2','Sólida o casi sólida']])) + row('Ecogenicidad', sl('ec', [['0','Anecoica'],['1','Hiper/isoecoica'],['2','Hipoecoica'],['3','Muy hipoecoica']])) + row('Forma', sl('sh', [['0','Más ancho que alto'],['3','Más alto que ancho']])) + row('Márgenes', sl('ma', [['0','Lisos o mal definidos'],['2','Lobulados o irregulares'],['3','Extensión extratiroidea']])) + row('Focos ecogénicos', sl('fo', [['0','Ninguno o artefacto en cola de cometa grande'],['1','Macrocalcificaciones'],['2','Calcificación periférica (anillo)'],['3','Focos ecogénicos puntiformes']])) + row('Tamaño máximo (cm)', nu('sz', 1.5, 0, 10, .1)),
+      calc: el => { const p = ['co','ec','sh','ma','fo'].reduce((a, k) => a + +sel(el, k), 0); const sz = num(el, 'sz');
+        const tr = p <= 1 ? 1 : p === 2 ? 2 : p === 3 ? 3 : p <= 6 ? 4 : 5; const TH = { 3:[2.5,1.5], 4:[1.5,1.0], 5:[1.0,.5] };
+        let r = tr <= 2 ? 'sin PAAF' : sz >= TH[tr][0] ? 'PAAF' : sz >= TH[tr][1] ? 'seguimiento ecográfico' : 'sin PAAF ni seguimiento por tamaño';
+        const t = `TI-RADS TR${tr} (${p} puntos), ${sz} cm: ${r}`; return { txt:t, html:`<b>TR${tr}</b> · ${p} puntos<br>${r}${tr >= 3 ? `<br><span class="steps">Umbrales TR${tr}: PAAF ≥ ${TH[tr][0]} cm, seguimiento ≥ ${TH[tr][1]} cm</span>` : ''}` }; } },
+    { id:'bethesda', title:'Bethesda 2023: riesgo y conducta habitual', ref:'Ali SZ et al. Thyroid 2023', doi:'10.1089/thy.2023.0141',
+      form: () => row('Categoría', sl('b', [['1','I · No diagnóstica'],['2','II · Benigna'],['3','III · AUS'],['4','IV · Neoplasia folicular'],['5','V · Sospechosa de malignidad'],['6','VI · Maligna']])),
+      calc: el => { const B = { 1:['≈ 13 %','repetir PAAF guiada por ecografía'], 2:['≈ 4 %','seguimiento clínico y ecográfico'], 3:['≈ 22 %','repetir PAAF, test molecular, lobectomía diagnóstica o vigilancia'], 4:['≈ 30 %','test molecular o lobectomía diagnóstica'], 5:['≈ 74 %','test molecular, lobectomía o tiroidectomía'], 6:['≈ 97 %','lobectomía o tiroidectomía'] }[sel(el, 'b')];
+        const t = `Bethesda ${sel(el, 'b')}: riesgo de malignidad ${B[0]}; conducta habitual: ${B[1]}`; return { txt:t, html:`Riesgo medio <b>${B[0]}</b><br>${B[1]}` }; } },
+    { id:'ataext', title:'Extensión de la cirugía en cáncer diferenciado (ATA 2025)', ref:'ATA 2025', doi:'10.1177/10507256251390877',
+      form: () => row('Tamaño (cm)', nu('sz', 1.8, 0, 15, .1)) + row('Extensión extratiroidea macroscópica', cb('ete')) + row('Ganglios clínicos (cN1)', cb('n1')) + row('Metástasis a distancia (cM1)', cb('m1')) + row('Nódulos / cáncer contralateral', cb('bil')),
+      calc: el => { const sz = num(el, 'sz'); let r;
+        if (chk(el, 'ete') || chk(el, 'n1') || chk(el, 'm1') || sz > 4) r = 'tiroidectomía total y resección de los ganglios afectados';
+        else if (chk(el, 'bil')) r = 'valorar tiroidectomía total (afectación o nódulos contralaterales)';
+        else if (sz <= 2) r = 'lobectomía (cT1N0M0)';
+        else r = 'lobectomía puede ser preferible (cT2N0M0 de bajo riesgo); total según rasgos y preferencia';
+        const t = `CDT ${sz} cm: ${r}`; return { txt:t, html:`<b>${r}</b>` }; } },
+    { id:'phpt', title:'Indicación quirúrgica en HPTP asintomático (2022)', ref:'Bilezikian JP et al. JBMR 2022', doi:'10.1002/jbmr.4677',
+      form: () => row('Calcio sobre el límite superior (mg/dl)', nu('ca', .6, 0, 5, .1)) + row('T-score mínimo', nu('t', -1.8, -6, 3, .1)) + row('Fractura vertebral', cb('vf')) + row('FG (ml/min)', nu('gfr', 80, 5, 150)) + row('Litiasis / nefrocalcinosis', cb('st')) + row('Calciuria (mg/24 h)', nu('uca', 200, 0, 800, 10)) + row('Sexo', sl('sx', [['f','Mujer'],['m','Varón']])) + row('Edad', nu('age', 60, 18, 100)),
+      calc: el => { const L = []; if (num(el, 'ca') > 1) L.push('calcio > 1 mg/dl sobre el límite'); if (num(el, 't') <= -2.5) L.push('T-score ≤ −2,5'); if (chk(el, 'vf')) L.push('fractura vertebral');
+        if (num(el, 'gfr') < 60) L.push('FG < 60'); if (chk(el, 'st')) L.push('litiasis/nefrocalcinosis'); if (num(el, 'uca') > (sel(el, 'sx') === 'f' ? 250 : 300)) L.push('hipercalciuria'); if (num(el, 'age') < 50) L.push('edad < 50');
+        const t = L.length ? 'HPTP: indicación quirúrgica (' + L.join(', ') + ')' : 'HPTP: sin criterios clásicos; cirugía posible si no hay contraindicación (decisión compartida)';
+        return { txt:t, html:L.length ? `<b>Indicación</b>: ${L.join(', ')}` : 'Sin criterios clásicos de indicación.' }; } },
   ],
   cr: [
     { id:'tmeq', title:'Margen circunferencial y distal', ref:'Guía holandesa CRC · ESMO 2025', url:'https://doi.org/10.1016/j.annonc.2025.05.528',
